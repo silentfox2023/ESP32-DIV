@@ -1,0 +1,13 @@
+{
+  "name": "ESP32-DIV CYD",
+  "version": "1.7.2",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        { "path": "firmware/ESP32-DIV-cyd-v1.7.2-merged.bin?cb=20260806", "offset": 0 }
+      ]
+    }
+  ]
+}
