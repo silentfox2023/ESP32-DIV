@@ -500,7 +500,9 @@ Connect over USB at **115200 bps** with newline or CRLF line endings. Commands w
 3. Browse to `http://<device-ip>/`, then log in with the default credentials `admin` / `div` (or your changed password).
 4. Select a `.bin` file and press **Update**. The device reboots when flashing completes.
 
-Web OTA requires the `default_8MB` partition layout with two OTA slots. Do not interrupt power during the update; the bootloader falls back to the previous slot if the new image is incomplete. The progress bar is an estimate because the browser does not send a content length.
+> **Web OTA needs a two-slot partition table.** The update is written into the second application slot, so the device must already carry the `default_8MB` layout with both `app0` (`ota_0`) and `app1` (`ota_1`). Web OTA cannot create that layout — if the device was flashed with a single-slot (no-OTA) scheme, the update will abort and the device will restart on the old firmware. Recover by flashing the complete image at `0x0` once; see [Flashing](#flashing).
+
+Do not interrupt power during the update; the bootloader falls back to the previous slot if the new image is incomplete. The progress bar is an estimate because the browser does not send a content length.
 
 ---
 
@@ -524,27 +526,31 @@ Three features are restricted: **HaleHound**, **RID Scanner**, and **RID Sim**.
 
 Firmware binaries are published on the [Releases](https://github.com/silentfox2023/ESP32-DIV/releases) page. Release assets contain **binaries only**; source code is not included in release assets.
 
+> **Always prefer the complete image.** In-device updates (Web OTA and SD Card Update) only work when the partition table on the device has two application slots (`app0` / `ota_0` and `app1` / `ota_1`). The complete image carries that table; the application-only image does not. If a device was ever flashed with a single-slot (no-OTA) layout, an in-device update cannot repair it — it aborts and the device reboots back into the old firmware after a couple of seconds. Flashing the complete image at `0x0` once restores the two-slot layout, after which Web OTA and SD Card Update work normally. Repeating the in-device update will never fix this.
+
 ### Release files
 
 | File | Purpose | Flash address |
 | --- | --- | --- |
-| `ESP32-DIV-V2-v1.8.4-full-16MB.bin` | Complete image: bootloader, partition table, OTA data, and application | `0x0` |
-| `ESP32-DIV-V2-v1.8.4-app.bin` | Application image only, for an existing compatible layout | `0x10000` |
+| `ESP32-DIV-V2-v1.8.5-full-16MB.bin` | **Recommended.** Complete image: bootloader, partition table (two application slots), OTA data, and application | `0x0` |
+| `ESP32-DIV-V2-v1.8.5-app.bin` | Application image only, for a device that already has the two-slot layout | `0x10000` |
 | `sha256sums.txt` | SHA-256 checksums | - |
 
 ### esptool
 
-Full image (recommended for a new device or after a full erase):
+Complete image (recommended for a new device, after a full erase, or to restore a device that cannot update itself):
 
 ```
-esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x0 ESP32-DIV-V2-v1.8.4-full-16MB.bin
+esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x0 ESP32-DIV-V2-v1.8.5-full-16MB.bin
 ```
 
-Application-only update (device already uses the `default_8MB` two-slot layout):
+Application-only update (device must already use the `default_8MB` two-slot layout):
 
 ```
-esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x10000 ESP32-DIV-V2-v1.8.4-app.bin
+esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x10000 ESP32-DIV-V2-v1.8.5-app.bin
 ```
+
+Flashing from **Arduino IDE** works as well: enable **Erase All Flash Before Sketch Upload** and select the 16 MB flash size with the two-OTA-slot partition scheme used by this release.
 
 ### Flash Download Tool
 
@@ -563,6 +569,8 @@ Use **DIO** flash mode and 40 MHz SPI speed. QIO or QOUT can produce a white scr
 3. Insert the card, power on, open **Update Firmware > SD Card Update**, select the file, and start the update.
 4. The device reboots when flashing completes; the original file is renamed as a backup.
 
+Like Web OTA, SD Card Update writes into the second application slot and therefore requires the two-slot partition table to be present already. It cannot add `app1` to a device that does not have it.
+
 ### Partition layout
 
 | Partition | Offset | Size |
@@ -574,13 +582,15 @@ Use **DIO** flash mode and 40 MHz SPI speed. QIO or QOUT can produce a white scr
 | SPIFFS | `0x670000` | `0x180000` |
 | coredump | `0x7F0000` | `0x10000` |
 
+Both `app0` and `app1` are required for in-device updates. Writing only the application at `0x10000` leaves the existing partition table untouched, so a single-slot device stays single-slot. The complete image at `0x0` rewrites the partition table together with the application and is the only way to guarantee the layout above.
+
 > These images target **16 MB** ESP32-DIV V2 hardware. Do not flash them to 4 MB or 8 MB devices.
 
 ---
 
 ## Quick start
 
-1. Flash the full firmware image at `0x0`, or use Web OTA / SD update on a device that already runs a compatible firmware.
+1. Flash the complete image at `0x0` (recommended). Web OTA and SD Card Update can be used later, but only on a device that already has the two-slot partition table — see [Flashing](#flashing).
 2. Power on and wait for the main menu. The status bar shows battery, charge state, Wi-Fi, and BLE indicators.
 3. Use the touchscreen or the five buttons: up/down to move, SELECT to confirm, LEFT to go back.
 4. For RID work, open **Tools > RID Scanner** for a quick scan, or **DroneX** for continuous monitoring.
@@ -600,7 +610,7 @@ Use **DIO** flash mode and 40 MHz SPI speed. QIO or QOUT can produce a white scr
 - **RFID Classic:** UID-level emulation only; authenticated sectors are not answered, and the `0x8C` command path is not hardware-validated.
 - **HaleHound:** compile-validated; not every module has been hardware-validated.
 - **EAPOL Capture:** purely passive and requires a client to reconnect naturally.
-- **Web OTA:** after an OTA update, a second USB flash is needed to place the image back into app0 for the next OTA cycle.
+- **In-device updates:** Web OTA and SD Card Update require the two-slot partition table to be present already; they write into the inactive slot and alternate on each update. On a device with a single-slot layout they fail and the device reboots on the old firmware — flash the complete image at `0x0` once to recover.
 - **Battery and buzzer:** the buzzer shares a GPIO with the battery voltage divider on some hardware revisions; use it as an optional feature.
 
 ---
@@ -610,8 +620,8 @@ Use **DIO** flash mode and 40 MHz SPI speed. QIO or QOUT can produce a white scr
 **The screen is white and there is no serial output.**
 Flash mode mismatch. Use **DIO**, not QIO or QOUT.
 
-**Web OTA reboots immediately after pressing Update.**
-The device is using a single-slot partition table. Use the `default_8MB` layout with app0 and app1.
+**Web OTA reboots immediately after pressing Update, and the device comes back on the old firmware.**
+The device has a single-slot partition table, so the update has nowhere valid to write. Web OTA and SD Card Update cannot fix this themselves. Flash `ESP32-DIV-V2-v1.8.5-full-16MB.bin` at `0x0` once (or upload from Arduino IDE with **Erase All Flash Before Sketch Upload** enabled); afterwards in-device updates work normally. See [Flashing](#flashing).
 
 **A restricted feature shows a license page.**
 The device MAC is not in the authorized list, or the DroneX license is missing. HaleHound, RID Scanner, and RID Sim share the MAC whitelist; DroneX uses a separate ECDSA license.
