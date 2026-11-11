@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
   <img src="https://github.com/user-attachments/assets/1f70e8ba-d8be-4889-959a-700294068a3e" alt="ESP32-DIV V2 banner" width="100%"/>
 
@@ -6,7 +6,7 @@
 
   <h3>Multi-band wireless research platform &mdash; SilentFOX Edition</h3>
 
-  <p><strong>Firmware v1.8.4 &middot; DroneX 2.1.0 &middot; ESP32-S3</strong></p>
+  <p><strong>Firmware v1.9.0 &middot; DroneX 2.1.0 &middot; ESP32-S3</strong></p>
 
   <p>
     <a href="https://github.com/silentfox2023/ESP32-DIV/releases/latest"><img src="https://img.shields.io/github/v/release/silentfox2023/ESP32-DIV?color=orange&label=firmware" alt="Latest firmware release"/></a>
@@ -53,24 +53,26 @@ This SilentFOX edition adds a dedicated **drone Remote ID (RID)** toolchain, inc
 | **2.4GHz** | 2.4 GHz Scanner, Proto Kill, ESB Sniffer, ESB Replay, MouseJack Scan, MouseJack Inject |
 | **Bluetooth** | BLE Scanner, BLE Sniffer, BLE Spoofer, Sour Apple, BLE Jammer, BLE Rubber Ducky, AirTag Spoofer, AirTag Sniffer, Skimmer Detect |
 | **SubGHz** | Replay Attack, Sub-GHz Jammer, Saved Profiles, De Bruijn / Brute Force, Jamming Detector |
-| **More** | IR remote tools, RFID/NFC (8 tools), GPS tools, HaleHound (13 modules) |
+| **More** | IR remote tools, RFID/NFC (8 tools), GPS tools, **Drone** submenu (4 tools), HaleHound (14 modules) |
 | **DroneX** | Continuous BLE + Wi-Fi Remote ID detection, target tracking, alerts, black/white lists, SD track logs, browser dashboard |
-| **Tools** | Serial Monitor, Update Firmware (Web OTA / SD), Touch Calibrate, RID Scanner, RID Sim, SD File Manager |
+| **Tools** | Serial Monitor, Update Firmware (Web OTA / SD), Touch Calibrate, SD File Manager |
 | **Settings / About** | Theme, brightness, NeoPixel effects, background auto-scan, persistent settings, version and credits |
 
 ### Drone Remote ID
 
 | Tool | Location | Purpose | Access |
 | --- | --- | --- | --- |
-| **RID Scanner** | Tools | Fast, zero-configuration RID detection over Wi-Fi channels 1-13 and BLE | Device MAC whitelist |
-| **RID Sim** | Tools | Multi-protocol RID transmitter simulating up to 12 drones | Device MAC whitelist |
+| **RID Scanner** | More > Drone | Fast, zero-configuration RID detection over Wi-Fi channels 1-13 and BLE | Device MAC whitelist |
+| **RID Spoof** | More > Drone | Multi-protocol RID transmitter simulating up to 12 drones | Device MAC whitelist |
+| **Drone Deauth** | More > Drone | Selective deauthentication against Wi-Fi drone control links | Device MAC whitelist |
+| **Drone Jelly** | More > Drone | 2.4 GHz carrier / sweep confined to 2400-2525 MHz | Device MAC whitelist |
 | **DroneX** | Main menu | Flagship continuous detection and management platform | Paid ECDSA license |
 
-All three RID tools decode **ASTM F3411**, **GB 46750-2025**, and **DJI proprietary DroneID**, covering current DJI models, older DJI aircraft, and other compliant manufacturers.
+All RID tools decode **ASTM F3411**, **GB 46750-2025**, and **DJI proprietary DroneID**, covering current DJI models, older DJI aircraft, and other compliant manufacturers.
 
 ### HaleHound
 
-HaleHound bundles 13 wireless experiment modules behind a single menu: Radio Test, IOT Recon, Deauther, Auth Flood, Predator, WhisperPair, Airoha Race, SkeletonKey, Scream, Guardian, Spectrum, EAPOL Capture, and RFID Classic.
+HaleHound bundles 14 wireless experiment modules behind a single menu: Radio Test, IOT Recon, Deauther, Auth Flood, Stations, Predator, WhisperPair, Airoha Race, SkeletonKey, Scream, Guardian, Spectrum, EAPOL Capture, and RFID Classic.
 
 ---
 
@@ -80,19 +82,19 @@ HaleHound bundles 13 wireless experiment modules behind a single menu: Radio Tes
 
 <img src="docs/images/menu-main.jpg" alt="ESP32-DIV V2 main menu with WiFi, 2.4GHz, Bluetooth, SubGHz, More, DroneX, Tools, Settings and About tiles" width="420"/>
 
-*Main menu on firmware v1.8.4. DroneX occupies the third row, first tile; HaleHound is available from the More menu.*
+*Main menu of the current firmware. DroneX occupies the third row, first tile; Drone and HaleHound are reached from the More menu.*
 
 ### Tools menu
 
-<img src="docs/images/menu-tools.jpg" alt="Tools menu showing Serial Monitor, Update Firmware, Touch Calibrate, RID Scanner, RID Sim and SD File Manager" width="420"/>
+<img src="docs/images/menu-tools.jpg" alt="Tools menu showing Serial Monitor, Update Firmware, Touch Calibrate and SD File Manager" width="420"/>
 
-*Tools menu: serial monitor, firmware update, touch calibration, the two RID tools, and the SD card file manager.*
+*Tools menu: serial monitor, firmware update, touch calibration, and the SD card file manager. In v1.9.0 the two RID tools are no longer here; they moved to More > Drone.*
 
 ### HaleHound module list
 
 <img src="docs/images/feature-halehound.jpg" alt="HaleHound module list with Predator, WhisperPair, Airoha Race, SkeletonKey, Scream, Guardian, Spectrum and EAPOL Capture" width="420"/>
 
-*HaleHound page 1 of 2. Every module reports READY from the shared module list.*
+*HaleHound module list. Every module reports READY from the shared list; the Stations scanner is the newest entry.*
 
 ### Scream
 
@@ -122,7 +124,7 @@ HaleHound bundles 13 wireless experiment modules behind a single menu: Radio Tes
 
 <img src="docs/images/feature-auth-flood.jpg" alt="Auth Flood screen showing target AP, BSSID, virtual station count and transmit statistics" width="420"/>
 
-*Auth Flood with an access point selected as the target. All offensive modules are restricted to authorized testing.*
+*Auth Flood target selection. All offensive modules are restricted to authorized testing.*
 
 ### DroneX on-device RID detector
 
@@ -307,6 +309,21 @@ Eight tools are available: Card Reader, Card Clone, Dump, Decode Access, Erase, 
 
 Satellite Scanner allocates a full-screen off-screen buffer of about 143 KB. If memory is fragmented after other radio features, it automatically falls back to direct rendering instead of failing.
 
+**Drone (More > Drone)**
+
+| Tool | Description |
+| --- | --- |
+| RID Scanner | Fast drone RID scanner over Wi-Fi channels 1-13 and BLE (device whitelist required) |
+| RID Spoof | Multi-protocol RID transmitter simulating up to 12 aircraft (device whitelist required) |
+| Drone Deauth | Passive drone-link identification followed by selective deauthentication of the Wi-Fi control link |
+| Drone Jelly | 2.4 GHz carrier or sweep limited to 2400-2525 MHz, aimed at drone control and video links |
+
+The whole Drone layer sits behind a single device authorization check made when **More > Drone** is opened; the individual tools inside it are not checked again.
+
+**Drone Deauth** identifies targets passively from Wi-Fi management frames: Wi-Fi Remote ID vendor IEs (ASTM F3411 / GB 46750 OUI `FA:0B:BC` and `90:3A:E6`), DJI DroneID vendor IE OUI `26:37:12`, NAN / Public Action RID broadcasts, and — as weak evidence only — beacon SSIDs matching drone prefixes such as `DJI-`, `TELLO-`, or `MAVIC-`. When a client (phone or controller app) is observed associated with the target, three out of four frames are sent directly to it; otherwise all frames are broadcast. This only affects 802.11 links such as a drone's own access point. It has no effect on OcuSync / Lightbridge or other proprietary frequency-hopping links, and it cannot reach 5 GHz.
+
+**Drone Jelly** offers two modes over the three nRF24 modules, which transmit on the same channel for higher combined output: **BARRAGE** covers channels 0-125 (2400-2525 MHz) and **FOCUS** covers channels 20-80 (2420-2480 MHz), where drone control and video links are most concentrated. It refuses to start while another nRF24 feature still owns the shared SPI bus and shows `BUS BUSY` instead.
+
 ### DroneX
 
 See [DroneX and Remote ID](#dronex-and-remote-id).
@@ -318,9 +335,9 @@ See [DroneX and Remote ID](#dronex-and-remote-id).
 | Serial Monitor | Mirrors serial output on the TFT at 115200 bps |
 | Update Firmware | Web OTA and microSD firmware update entry points |
 | Touch Calibrate | Four-corner XPT2046 calibration |
-| RID Scanner | Fast drone RID scanner (device whitelist required) |
-| RID Sim | Multi-protocol RID transmitter (device whitelist required) |
 | SD File Manager | Browse, open, and manage files on the microSD card |
+
+The two RID tools previously listed here now live in **More > Drone**.
 
 ### Settings and About
 
@@ -382,9 +399,9 @@ A successful activation is stored permanently and revalidated on every boot.
 
 RID Scanner is a zero-configuration scanner for field checks. It alternates between Wi-Fi channels 1-13 and BLE advertising, then lists active targets with serial number, latitude/longitude, RSSI, and source interface. Protocol counters show management frames, BLE, GB, DJI, and ASTM traffic. A target turns gray after 5 seconds without an advertisement and is removed after 30 seconds. Press SELECT to exit.
 
-### RID Sim
+### RID Spoof
 
-RID Sim turns the device into a virtual drone fleet. It simulates **10 aircraft by default and up to 12**, each with a unique identity, transmitting standard RID data over Wi-Fi beacons and BLE advertising.
+RID Spoof (formerly RID Sim) turns the device into a virtual drone fleet. It simulates **10 aircraft by default and up to 12**, each with a unique identity, transmitting standard RID data over Wi-Fi beacons and BLE advertising.
 
 | Bearer | Protocol |
 | --- | --- |
@@ -393,9 +410,9 @@ RID Sim turns the device into a virtual drone fleet. It simulates **10 aircraft 
 | Wi-Fi beacon | DJI proprietary DroneID |
 | BLE advertising | ASTM F3411 service data (0xFFFA) |
 
-Each aircraft is placed at a different bearing, starting at 300 m and increasing by 80 m per aircraft, with incremental altitude, speed, and heading. Identities are randomized on boot and include model names such as Mini 2 and Mavic Air 2. RID Sim emits RID frames that carry these identities; it does not emulate OcuSync radio links.
+Each aircraft is placed at a different bearing, starting at 300 m and increasing by 80 m per aircraft, with incremental altitude, speed, and heading. Identities are randomized on boot and include model names such as Mini 2 and Mavic Air 2. RID Spoof emits RID frames that carry these identities; it does not emulate OcuSync radio links.
 
-Serial commands while RID Sim is running:
+Serial commands while RID Spoof is running:
 
 | Command | Action |
 | --- | --- |
@@ -407,20 +424,21 @@ Serial commands while RID Sim is running:
 | `wifi <0\|1>` | Enable or disable all Wi-Fi RID output |
 | `astm <0\|1>` / `gb <0\|1>` / `dji <0\|1>` | Enable or disable individual Wi-Fi protocols |
 | `ble <0\|1>` | Enable or disable BLE output |
-| `exit` | Leave RID Sim |
+| `exit` | Leave RID Spoof |
 
 ---
 
 ## HaleHound
 
-HaleHound is a self-contained suite of 13 wireless experiment modules, implemented in its own namespace with a shared UI, button handling, and SPI arbitration. Open it from **More > HaleHound**.
+HaleHound is a self-contained suite of 14 wireless experiment modules, implemented in its own namespace with a shared UI, button handling, and SPI arbitration. Open it from **More > HaleHound**.
 
 | Module | Purpose |
 | --- | --- |
 | Radio Test | Checks nRF24 #1-#3, CC1101, PN532 firmware, GPS satellite count, and fix time |
 | IOT Recon | Passive Wi-Fi AP scan with vendor identification and default-credential hints |
 | Deauther | Targeted deauthentication with channel hopping, reason-code selection, and client detection |
-| Auth Flood | Authentication request flood with access point selection and live statistics |
+| Auth Flood | Authentication request flood with a four-column network list (SSID / channel / RSSI / encryption), a large START/STOP control, a 56-segment rate bar and six live counters |
+| Stations | Connected client scanner with AP filter, channel lock, RSSI sort, single-row pinning, and optional deauth handoff |
 | Predator | BLE GATT honeypot that advertises discoverable services |
 | WhisperPair | Passive Google Fast Pair (0xFE2C) advertisement scanner with Model ID lookup |
 | Airoha Race | Detects BLE devices advertising the Airoha RACE service |
@@ -433,6 +451,9 @@ HaleHound is a self-contained suite of 13 wireless experiment modules, implement
 
 **Notes:**
 
+- Stations hops across channels 1-13 by default. You can lock a single channel or select a specific access point; results are sorted by signal strength, and one row can be pinned while scanning continues. The deauth handoff only runs for a client whose access point is known — without that association it is refused.
+- If the device hotspot has associated clients, changing channel fails at the driver level. The firmware briefly detaches the hotspot client and retries; if the channel still cannot be set, it stays on the real channel and tells you so instead of pretending to scan elsewhere.
+- Frame capture re-initialises promiscuous mode in a fixed order (off, set filter, register callback, on, read back) and verifies the result, so a scan no longer appears to run while silently capturing nothing.
 - Guardian is receive-only. An alert appears when deauthentication plus disassociation frames reach 20 within a 10-second window.
 - EAPOL Capture only records handshakes from clients that reconnect naturally; it does not disconnect clients or crack keys. Save raw frames to a `.pcap` file for Wireshark.
 - Spectrum displays frame counts, not calibrated RF energy. The SoftAP follows the scanned channel and connected clients may briefly drop.
@@ -508,17 +529,18 @@ Do not interrupt power during the update; the bootloader falls back to the previ
 
 ## Licensing and restricted features
 
-Three features are restricted: **HaleHound**, **RID Scanner**, and **RID Sim**.
+Two menu layers are restricted: **More > Drone** and **More > HaleHound**.
 
-- Their menu entries are always visible and can always be opened.
-- On a device that is not authorized, opening the feature shows a single English license notice page instead of the feature UI.
+- Both menu entries are always visible and can always be opened.
+- On a device that is not authorized, opening the layer shows a single English license notice page instead of its contents.
+- The check is made once, when the layer is opened. The tools inside a layer (including RID Scanner and RID Spoof) are not checked again.
 - Press **LEFT** / **SELECT**, or tap **Back**, to return to the previous menu.
-- Authorization is bound to the device Wi-Fi STA MAC address and checked when the feature is opened.
+- Authorization is bound to the device Wi-Fi STA MAC address.
 - DroneX uses a separate paid ECDSA license; the two mechanisms are independent.
 
 <img src="docs/images/license-required.jpg" alt="License notice page shown when a restricted feature is opened on an unauthorized device" width="420"/>
 
-*The shared license notice page used by HaleHound, RID Scanner, and RID Sim on unauthorized devices.*
+*The license notice page used by the Drone and HaleHound layers on unauthorized devices.*
 
 ---
 
@@ -532,8 +554,8 @@ Firmware binaries are published on the [Releases](https://github.com/silentfox20
 
 | File | Purpose | Flash address |
 | --- | --- | --- |
-| `ESP32-DIV-V2-v1.8.5-full-16MB.bin` | **Recommended.** Complete image: bootloader, partition table (two application slots), OTA data, and application | `0x0` |
-| `ESP32-DIV-V2-v1.8.5-app.bin` | Application image only, for a device that already has the two-slot layout | `0x10000` |
+| `ESP32-DIV-V2-v1.9.0-full-16MB.bin` | **Recommended.** Complete image: bootloader, partition table (two application slots), OTA data, and application | `0x0` |
+| `ESP32-DIV-V2-v1.9.0-app.bin` | Application image only, for a device that already has the two-slot layout | `0x10000` |
 | `sha256sums.txt` | SHA-256 checksums | - |
 
 ### esptool
@@ -541,13 +563,13 @@ Firmware binaries are published on the [Releases](https://github.com/silentfox20
 Complete image (recommended for a new device, after a full erase, or to restore a device that cannot update itself):
 
 ```
-esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x0 ESP32-DIV-V2-v1.8.5-full-16MB.bin
+esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x0 ESP32-DIV-V2-v1.9.0-full-16MB.bin
 ```
 
 Application-only update (device must already use the `default_8MB` two-slot layout):
 
 ```
-esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x10000 ESP32-DIV-V2-v1.8.5-app.bin
+esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x10000 ESP32-DIV-V2-v1.9.0-app.bin
 ```
 
 Flashing from **Arduino IDE** works as well: enable **Erase All Flash Before Sketch Upload** and select the 16 MB flash size with the two-OTA-slot partition scheme used by this release.
@@ -621,10 +643,10 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 Flash mode mismatch. Use **DIO**, not QIO or QOUT.
 
 **Web OTA reboots immediately after pressing Update, and the device comes back on the old firmware.**
-The device has a single-slot partition table, so the update has nowhere valid to write. Web OTA and SD Card Update cannot fix this themselves. Flash `ESP32-DIV-V2-v1.8.5-full-16MB.bin` at `0x0` once (or upload from Arduino IDE with **Erase All Flash Before Sketch Upload** enabled); afterwards in-device updates work normally. See [Flashing](#flashing).
+The device has a single-slot partition table, so the update has nowhere valid to write. Web OTA and SD Card Update cannot fix this themselves. Flash `ESP32-DIV-V2-v1.9.0-full-16MB.bin` at `0x0` once (or upload from Arduino IDE with **Erase All Flash Before Sketch Upload** enabled); afterwards in-device updates work normally. See [Flashing](#flashing).
 
 **A restricted feature shows a license page.**
-The device MAC is not in the authorized list, or the DroneX license is missing. HaleHound, RID Scanner, and RID Sim share the MAC whitelist; DroneX uses a separate ECDSA license.
+The device MAC is not in the authorized list, or the DroneX license is missing. Drone and HaleHound share the MAC whitelist; DroneX uses a separate ECDSA license.
 
 **DroneX finds no drones indoors.**
 RID requires an outdoor environment and a GNSS fix on the aircraft. Move outdoors and keep the device in AP mode for Wi-Fi RID reception.
@@ -634,6 +656,9 @@ Expected. DroneX closes its own hotspot in STA mode. Use the Info tab AP button 
 
 **IR recording does not work without an SD card.**
 IR profiles are stored on the microSD card. Insert a FAT32 card.
+
+**Why do I not see my own phone's MAC address in a client scan?**
+Modern phones use a private, randomly generated MAC address for each Wi-Fi network by default. The address on air is not the hardware address printed in the phone settings, so it will never match. This is operating system behaviour, not a limitation of the device.
 
 **Why does the heartbeat show `sniff=0` in STA mode?**
 Wi-Fi promiscuous sniffing is intentionally disabled while STA is connected, as described in Known limitations. BLE RID remains active.
