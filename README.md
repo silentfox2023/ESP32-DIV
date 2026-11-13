@@ -6,7 +6,7 @@
 
   <h3>Multi-band wireless research platform &mdash; SilentFOX Edition</h3>
 
-  <p><strong>Firmware v1.9.0 &middot; DroneX 2.1.0 &middot; ESP32-S3</strong></p>
+  <p><strong>Firmware v1.9.1 &middot; DroneX 2.1.0 &middot; ESP32-S3</strong></p>
 
   <p>
     <a href="https://github.com/silentfox2023/ESP32-DIV/releases/latest"><img src="https://img.shields.io/github/v/release/silentfox2023/ESP32-DIV?color=orange&label=firmware" alt="Latest firmware release"/></a>
@@ -72,7 +72,7 @@ All RID tools decode **ASTM F3411**, **GB 46750-2025**, and **DJI proprietary Dr
 
 ### HaleHound
 
-HaleHound bundles 14 wireless experiment modules behind a single menu: Radio Test, IOT Recon, Deauther, Auth Flood, Stations, Predator, WhisperPair, Airoha Race, SkeletonKey, Scream, Guardian, Spectrum, EAPOL Capture, and RFID Classic.
+HaleHound bundles 14 wireless experiment modules behind a single menu: Radio Test, IOT Recon, Deauther, Auth Flood, Stations, Predator, WhisperPair, Airoha Race, SkeletonKey, AirTag Scream, Guardian, Spectrum, EAPOL Capture, and RFID Classic.
 
 ---
 
@@ -88,19 +88,19 @@ HaleHound bundles 14 wireless experiment modules behind a single menu: Radio Tes
 
 <img src="docs/images/menu-tools.jpg" alt="Tools menu showing Serial Monitor, Update Firmware, Touch Calibrate and SD File Manager" width="420"/>
 
-*Tools menu: serial monitor, firmware update, touch calibration, and the SD card file manager. In v1.9.0 the two RID tools are no longer here; they moved to More > Drone.*
+*Tools menu: serial monitor, firmware update, touch calibration, and the SD card file manager. In v1.9.1 the two RID tools are no longer here; they moved to More > Drone.*
 
 ### HaleHound module list
 
-<img src="docs/images/feature-halehound.jpg" alt="HaleHound module list with Predator, WhisperPair, Airoha Race, SkeletonKey, Scream, Guardian, Spectrum and EAPOL Capture" width="420"/>
+<img src="docs/images/feature-halehound.jpg" alt="HaleHound module list with Predator, WhisperPair, Airoha Race, SkeletonKey, AirTag Scream, Guardian, Spectrum and EAPOL Capture" width="420"/>
 
 *HaleHound module list. Every module reports READY from the shared list; the Stations scanner is the newest entry.*
 
-### Scream
+### AirTag Scream
 
-<img src="docs/images/feature-scream.jpg" alt="Scream BLE advertising payload rotation screen showing names, cycle time and transmit counters" width="420"/>
+<img src="docs/images/feature-scream.jpg" alt="AirTag Scream BLE name and payload rotation screen showing names, cycle time and transmit counters" width="420"/>
 
-*Scream rotates BLE advertisement payloads and device names (8 names, 40 ms cycle). It does not perform MAC flooding.*
+*AirTag Scream rotates BLE advertisement payloads and device names (8 names, 40 ms cycle). It does not perform MAC flooding and cannot make nearby AirTags play a sound.*
 
 ### Guardian
 
@@ -397,7 +397,9 @@ A successful activation is stored permanently and revalidated on every boot.
 
 ### RID Scanner
 
-RID Scanner is a zero-configuration scanner for field checks. It alternates between Wi-Fi channels 1-13 and BLE advertising, then lists active targets with serial number, latitude/longitude, RSSI, and source interface. Protocol counters show management frames, BLE, GB, DJI, and ASTM traffic. A target turns gray after 5 seconds without an advertisement and is removed after 30 seconds. Press SELECT to exit.
+RID Scanner is a zero-configuration scanner for field checks. It alternates between Wi-Fi channels 1-13 and BLE advertising, then lists active targets with serial number, latitude/longitude, RSSI, and source interface. Protocol counters show management frames, BLE, GB, DJI, and ASTM traffic. A target turns gray after 5 seconds without an advertisement and is removed after 30 seconds.
+
+Two channel modes are available: **AUTO** (default, rotates 1-13) and **manual lock** (stays on one channel for a higher hit rate). On exit the channel is reset to `AUTO / CH1`. Targets on other channels are naturally invisible while locked. Press SELECT to exit.
 
 ### RID Spoof
 
@@ -439,11 +441,11 @@ HaleHound is a self-contained suite of 14 wireless experiment modules, implement
 | Deauther | Targeted deauthentication with channel hopping, reason-code selection, and client detection |
 | Auth Flood | Authentication request flood with a four-column network list (SSID / channel / RSSI / encryption), a large START/STOP control, a 56-segment rate bar and six live counters |
 | Stations | Connected client scanner with AP filter, channel lock, RSSI sort, single-row pinning, and optional deauth handoff |
-| Predator | BLE GATT honeypot that advertises discoverable services |
-| WhisperPair | Passive Google Fast Pair (0xFE2C) advertisement scanner with Model ID lookup |
-| Airoha Race | Detects BLE devices advertising the Airoha RACE service |
-| SkeletonKey | Scans connectable BLE devices, counts services and characteristics, then disconnects |
-| Scream | Rotates BLE advertisement payloads and names (8 names, 40 ms cycle) |
+| Predator | BLE device profiling: self-contained scan and classification (name / 16-bit UUID / vendor ID / OUI / 128-bit RACE), Top20 list, detail page, P2 RECON GATT enumeration and P3 Honeypot |
+| WhisperPair | Fast Pair probing per CVE-2025-36911: 25-model public key table, four verdicts, error codes, 2 × 3 s interruptible connection |
+| Airoha Race | Detects BLE devices advertising the Airoha RACE service; pairing-free RACE access to version, BD_ADDR and bounded reads |
+| SkeletonKey | Real connection with full GATT enumeration: three-level tree (24 services / 96 characteristics / 192 descriptors), five screens, read, write and notify |
+| AirTag Scream | Rotates BLE advertisement payloads and names (8 names, 40 ms cycle; no AirTag audio trigger) |
 | Guardian | Passive monitoring of one AP channel with deauthentication and disassociation alerts |
 | Spectrum | Channel activity bar chart (802.11 frame counts) plus BLE advertiser count |
 | EAPOL Capture | Passive WPA/WPA2 four-way handshake capture, exportable as PCAP |
@@ -458,6 +460,10 @@ HaleHound is a self-contained suite of 14 wireless experiment modules, implement
 - EAPOL Capture only records handshakes from clients that reconnect naturally; it does not disconnect clients or crack keys. Save raw frames to a `.pcap` file for Wireshark.
 - Spectrum displays frame counts, not calibrated RF energy. The SoftAP follows the scanned channel and connected clients may briefly drop.
 - RFID Classic emulates UID-level behavior only; authenticated sectors are not answered, and the `0x8C` raw command path has not been hardware-validated.
+- **Predator:** P1 scan/classification and the detail page are usable; P2 RECON requires a connectable target and marks `TRUNC` when the heap or time limit is hit; **P3 Honeypot has not been hardware-validated** (continuous start/stop, SD loot writing and exit cleanup are still to be confirmed). Loot is written to `/loot/hp_*.txt`.
+- **WhisperPair:** verdicts are only given for devices advertising the Fast Pair service and matching the 25-model key table; everything else reports `UNKNOWN`. Failed probes show an error code.
+- **SkeletonKey:** requires the target to accept a connection; enumeration is capped at 24/96/192 and marks truncation. Writes are limited to writable characteristics and the value must be entered as hex.
+- **Airoha Race:** bounded reads only — no flash writing and no RAM read path yet.
 - HaleHound modules are compile-validated but were not all hardware-validated at release time.
 
 ---
@@ -554,8 +560,8 @@ Firmware binaries are published on the [Releases](https://github.com/silentfox20
 
 | File | Purpose | Flash address |
 | --- | --- | --- |
-| `ESP32-DIV-V2-v1.9.0-full-16MB.bin` | **Recommended.** Complete image: bootloader, partition table (two application slots), OTA data, and application | `0x0` |
-| `ESP32-DIV-V2-v1.9.0-app.bin` | Application image only, for a device that already has the two-slot layout | `0x10000` |
+| `ESP32-DIV-V2-v1.9.1-full-16MB.bin` | **Recommended.** Complete image: bootloader, partition table (two application slots), OTA data, and application | `0x0` |
+| `ESP32-DIV-V2-v1.9.1-app.bin` | Application image only, for a device that already has the two-slot layout | `0x10000` |
 | `sha256sums.txt` | SHA-256 checksums | - |
 
 ### esptool
@@ -563,13 +569,13 @@ Firmware binaries are published on the [Releases](https://github.com/silentfox20
 Complete image (recommended for a new device, after a full erase, or to restore a device that cannot update itself):
 
 ```
-esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x0 ESP32-DIV-V2-v1.9.0-full-16MB.bin
+esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x0 ESP32-DIV-V2-v1.9.1-full-16MB.bin
 ```
 
 Application-only update (device must already use the `default_8MB` two-slot layout):
 
 ```
-esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x10000 ESP32-DIV-V2-v1.9.0-app.bin
+esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x10000 ESP32-DIV-V2-v1.9.1-app.bin
 ```
 
 Flashing from **Arduino IDE** works as well: enable **Erase All Flash Before Sketch Upload** and select the 16 MB flash size with the two-OTA-slot partition scheme used by this release.
@@ -615,7 +621,7 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 1. Flash the complete image at `0x0` (recommended). Web OTA and SD Card Update can be used later, but only on a device that already has the two-slot partition table — see [Flashing](#flashing).
 2. Power on and wait for the main menu. The status bar shows battery, charge state, Wi-Fi, and BLE indicators.
 3. Use the touchscreen or the five buttons: up/down to move, SELECT to confirm, LEFT to go back.
-4. For RID work, open **Tools > RID Scanner** for a quick scan, or **DroneX** for continuous monitoring.
+4. For RID work, open **More > Drone > RID Scanner** for a quick scan, or **DroneX** for continuous monitoring.
 5. For DroneX browser access, join the `DroneX-xxxx` hotspot with password `dronerx88` and open `http://192.168.4.1`.
 6. Insert a FAT32 microSD card for PCAP logs, IR profiles, Ducky scripts, RID tracks, firmware updates, and settings mirroring.
 7. Open **Settings** to adjust brightness, theme, NeoPixel effects, and background scanning.
@@ -643,7 +649,7 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 Flash mode mismatch. Use **DIO**, not QIO or QOUT.
 
 **Web OTA reboots immediately after pressing Update, and the device comes back on the old firmware.**
-The device has a single-slot partition table, so the update has nowhere valid to write. Web OTA and SD Card Update cannot fix this themselves. Flash `ESP32-DIV-V2-v1.9.0-full-16MB.bin` at `0x0` once (or upload from Arduino IDE with **Erase All Flash Before Sketch Upload** enabled); afterwards in-device updates work normally. See [Flashing](#flashing).
+The device has a single-slot partition table, so the update has nowhere valid to write. Web OTA and SD Card Update cannot fix this themselves. Flash `ESP32-DIV-V2-v1.9.1-full-16MB.bin` at `0x0` once (or upload from Arduino IDE with **Erase All Flash Before Sketch Upload** enabled); afterwards in-device updates work normally. See [Flashing](#flashing).
 
 **A restricted feature shows a license page.**
 The device MAC is not in the authorized list, or the DroneX license is missing. Drone and HaleHound share the MAC whitelist; DroneX uses a separate ECDSA license.
