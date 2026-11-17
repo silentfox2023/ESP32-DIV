@@ -126,6 +126,18 @@ HaleHound bundles 14 wireless experiment modules behind a single menu: Radio Tes
 
 *Auth Flood target selection. All offensive modules are restricted to authorized testing.*
 
+### Drone Jelly
+
+<img src="docs/images/feature-Drone-Jelly" alt="Three NRF24 modules transmit continuous carriers on 2.4 GHz while hopping channels rapidly" width="420"/>
+
+* built for testing drone links under heavy interference.*
+
+### Drone on-device RID Spoof
+
+<img src="docs/images/feature-RID-SPOOF.jpg" alt="Turns the device into a virtual drone signal source: by default it simulates 10 distinct drone identities at once, up to 12, broadcasting standard Remote ID data over Wi-Fi beacons and BLE advertisements." width="420"/>
+
+*A single unit is enough to test, validate and demo any RID detection system — no real drone required.*
+
 ### DroneX on-device RID detector
 
 <img src="docs/images/feature-rid-detector.jpg" alt="DroneX RID Detector screen listing detected DJI Mavic targets with distance and signal strength" width="420"/>
