@@ -128,7 +128,7 @@ HaleHound bundles 14 wireless experiment modules behind a single menu: Radio Tes
 
 ### Drone Jelly
 
-<img src="docs/images/feature-Drone-Jelly" alt="Three NRF24 modules transmit continuous carriers on 2.4 GHz while hopping channels rapidly" width="420"/>
+<img src="docs/images/feature-Drone-Jelly.jpg" alt="Three NRF24 modules transmit continuous carriers on 2.4 GHz while hopping channels rapidly" width="420"/>
 
 * built for testing drone links under heavy interference.*
 
