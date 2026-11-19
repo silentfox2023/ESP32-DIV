@@ -6,7 +6,7 @@
 
   <h3>Multi-band wireless research platform &mdash; SilentFOX Edition</h3>
 
-  <p><strong>Firmware v1.9.1 &middot; DroneX 2.1.0 &middot; ESP32-S3</strong></p>
+  <p><strong>Firmware v1.9.2 &middot; DroneX 2.1.0 &middot; ESP32-S3</strong></p>
 
   <p>
     <a href="https://github.com/silentfox2023/ESP32-DIV/releases/latest"><img src="https://img.shields.io/github/v/release/silentfox2023/ESP32-DIV?color=orange&label=firmware" alt="Latest firmware release"/></a>
@@ -50,13 +50,13 @@ This SilentFOX edition adds a dedicated **drone Remote ID (RID)** toolchain, inc
 | Menu | Capabilities |
 | --- | --- |
 | **WiFi** | Packet Monitor, Wi-Fi Scanner, Beacon Spammer, WiFi Deauther, Deauth Detector, Captive Portal, Probe Flood, Hidden SSID Revealer, WPS Scanner, ARP Scanner, Karma Attack |
-| **2.4GHz** | 2.4 GHz Scanner, Proto Kill, ESB Sniffer, ESB Replay, MouseJack Scan, MouseJack Inject |
+| **2.4GHz** | 2.4 GHz Scanner (three radios in parallel), Proto Kill (with persisted parameter page), ESB Sniffer, ESB Replay, MouseJack Scan, MouseJack Inject |
 | **Bluetooth** | BLE Scanner, BLE Sniffer, BLE Spoofer, Sour Apple, BLE Jammer, BLE Rubber Ducky, AirTag Spoofer, AirTag Sniffer, Skimmer Detect |
 | **SubGHz** | Replay Attack, Sub-GHz Jammer, Saved Profiles, De Bruijn / Brute Force, Jamming Detector |
-| **More** | IR remote tools, RFID/NFC (8 tools), GPS tools, **Drone** submenu (4 tools), HaleHound (14 modules) |
+| **More** | IR remote tools, RFID/NFC (8 tools), GPS tools, **Drone** submenu (4 tools), HaleHound (16 modules) |
 | **DroneX** | Continuous BLE + Wi-Fi Remote ID detection, target tracking, alerts, black/white lists, SD track logs, browser dashboard |
-| **Tools** | Serial Monitor, Update Firmware (Web OTA / SD), Touch Calibrate, SD File Manager |
-| **Settings / About** | Theme, brightness, NeoPixel effects, background auto-scan, persistent settings, version and credits |
+| **Tools** | Serial Monitor, Update Firmware (Web OTA / SD), Touch Calibrate, SD File Manager, DEV Info |
+| **Settings / About** | Theme, brightness, five NeoPixel effects with three brightness levels, background auto-scan, persistent settings, version and credits |
 
 ### Drone Remote ID
 
@@ -72,7 +72,7 @@ All RID tools decode **ASTM F3411**, **GB 46750-2025**, and **DJI proprietary Dr
 
 ### HaleHound
 
-HaleHound bundles 14 wireless experiment modules behind a single menu: Radio Test, IOT Recon, Deauther, Auth Flood, Stations, Predator, WhisperPair, Airoha Race, SkeletonKey, AirTag Scream, Guardian, Spectrum, EAPOL Capture, and RFID Classic.
+HaleHound bundles 16 wireless experiment modules behind a single menu: Radio Test, IOT Recon, Deauther, Auth Flood, Stations, Beacon, KARR, Predator, WhisperPair, Airoha Race, SkeletonKey, AirTag Scream, Guardian, Spectrum, EAPOL Capture, and RFID Classic.
 
 ---
 
@@ -106,7 +106,7 @@ HaleHound bundles 14 wireless experiment modules behind a single menu: Radio Tes
 
 <img src="docs/images/feature-guardian.jpg" alt="Guardian passive monitoring screen showing frame counters, deauthentication counts and alert state" width="420"/>
 
-*Guardian locks onto one access point channel and counts management, data, deauthentication, and disassociation frames. It is receive-only.*
+*Guardian learns a per-channel baseline and flags management-frame anomalies against it. It is receive-only.*
 
 ### Spectrum
 
@@ -276,13 +276,15 @@ HaleHound bundles 14 wireless experiment modules behind a single menu: Radio Tes
 | Tool | Description |
 | --- | --- |
 | 2.4 GHz Scanner | Scans 128 channels and visualizes activity beyond Wi-Fi (Zigbee, proprietary remotes) |
-| Proto Kill | Transmits disruptive 2.4 GHz waveforms against Zigbee and neighboring ISM traffic |
+| Proto Kill | Transmits disruptive 2.4 GHz waveforms against Zigbee and neighboring ISM traffic; the on-device parameter page sets POWER / MOD / DATA RATE / DWELL / GFSK LEN and persists them across reboots |
 | ESB Sniffer | Passively captures Enhanced ShockBurst packets |
 | ESB Replay | Replays captured ESB packets |
 | MouseJack Scan | Detects wireless mice and keyboards vulnerable to MouseJack |
 | MouseJack Inject | Injects test keystrokes into vulnerable receivers you own |
 
 The nRF24 and CC1101 paths share the FSPI bus with the SD card, so the firmware performs explicit chip-select arbitration before every transfer. The 2.4 GHz Scanner performs a full SPI lifecycle handover on entry, so it works immediately after a cold boot without visiting another radio feature first.
+
+Since v1.9.2 the 2.4 GHz Scanner uses all three nRF24 modules at the same time, each listening on a different channel with an equal 154 µs window and rotating channel groups every round; measured coverage is about 1.4× the older single-module sweep with unchanged sensitivity. One failed module is dropped and the scanner falls back to module #3 alone. Entry forces Wi-Fi off (about 31.6 KB released) and stops BLE scanning and advertising; Wi-Fi is not restored automatically afterwards, so a later Wi-Fi feature has to initialise it again. Per-frame `[Scan]` debug output was removed.
 
 ### Sub-GHz (CC1101)
 
@@ -348,12 +350,13 @@ See [DroneX and Remote ID](#dronex-and-remote-id).
 | Update Firmware | Web OTA and microSD firmware update entry points |
 | Touch Calibrate | Four-corner XPT2046 calibration |
 | SD File Manager | Browse, open, and manage files on the microSD card |
+| DEV Info | Device, version, chip, CPU, flash, PSRAM, free heap, MAC, uptime, and project links |
 
 The two RID tools previously listed here now live in **More > Drone**.
 
 ### Settings and About
 
-Settings covers theme colors, display brightness, NeoPixel effects, background auto-scan, and saving the configuration. Settings are written to NVS namespace `esp32div` first and mirrored to `/config/settings.json` on SD when a card is present, so settings survive power loss even without a card. LittleFS is not used.
+Settings covers theme colors, display brightness, NeoPixel effects, background auto-scan, and saving the configuration. The NeoPixel section offers five effects — solid, breath, off, marquee, and blink — plus three brightness levels (low, medium, high). Solid, breath, and blink follow the accent color; the marquee completes one lap in 300 ms. Settings are written to NVS namespace `esp32div` first and mirrored to `/config/settings.json` on SD when a card is present, so settings survive power loss even without a card. LittleFS is not used.
 
 About shows the firmware version, build information, and project credits.
 
@@ -450,15 +453,17 @@ HaleHound is a self-contained suite of 14 wireless experiment modules, implement
 | --- | --- |
 | Radio Test | Checks nRF24 #1-#3, CC1101, PN532 firmware, GPS satellite count, and fix time |
 | IOT Recon | Passive Wi-Fi AP scan with vendor identification and default-credential hints |
-| Deauther | Targeted deauthentication with channel hopping, reason-code selection, and client detection |
+| Deauther | Targeted deauthentication with channel hopping, reason-code selection, client detection, and a six-slot frame-form panel (MIXED / BCAST / UNICAST defined) |
 | Auth Flood | Authentication request flood with a four-column network list (SSID / channel / RSSI / encryption), a large START/STOP control, a 56-segment rate bar and six live counters |
-| Stations | Connected client scanner with AP filter, channel lock, RSSI sort, single-row pinning, and optional deauth handoff |
+| Stations | Connected client scanner with PRIME / GOOD / WEAK / NO grading, AP filter, channel lock, RSSI sort, single-row pinning, and optional deauth handoff |
+| Beacon | Beacon flood in LOCK (one channel) or HOP mode (channels 1-13 every 250 ms), with a random SSID and BSSID per frame |
+| KARR | Read-only BLE detection by device name; never connects and never transmits |
 | Predator | BLE device profiling: self-contained scan and classification (name / 16-bit UUID / vendor ID / OUI / 128-bit RACE), Top20 list, detail page, P2 RECON GATT enumeration and P3 Honeypot |
 | WhisperPair | Fast Pair probing per CVE-2025-36911: 25-model public key table, four verdicts, error codes, 2 × 3 s interruptible connection |
 | Airoha Race | Detects BLE devices advertising the Airoha RACE service; pairing-free RACE access to version, BD_ADDR and bounded reads |
 | SkeletonKey | Real connection with full GATT enumeration: three-level tree (24 services / 96 characteristics / 192 descriptors), five screens, read, write and notify |
 | AirTag Scream | Rotates BLE advertisement payloads and names (8 names, 40 ms cycle; no AirTag audio trigger) |
-| Guardian | Passive monitoring of one AP channel with deauthentication and disassociation alerts |
+| Guardian | Passive per-channel baseline learning for deauth / disassoc / beacon traffic, with rate bars, RSSI, and an event log |
 | Spectrum | Channel activity bar chart (802.11 frame counts) plus BLE advertiser count |
 | EAPOL Capture | Passive WPA/WPA2 four-way handshake capture, exportable as PCAP |
 | RFID Classic | PN532 target-mode MIFARE Classic 1K UID emulation |
@@ -468,14 +473,18 @@ HaleHound is a self-contained suite of 14 wireless experiment modules, implement
 - Stations hops across channels 1-13 by default. You can lock a single channel or select a specific access point; results are sorted by signal strength, and one row can be pinned while scanning continues. The deauth handoff only runs for a client whose access point is known — without that association it is refused.
 - If the device hotspot has associated clients, changing channel fails at the driver level. The firmware briefly detaches the hotspot client and retries; if the channel still cannot be set, it stays on the real channel and tells you so instead of pretending to scan elsewhere.
 - Frame capture re-initialises promiscuous mode in a fixed order (off, set filter, register callback, on, read back) and verifies the result, so a scan no longer appears to run while silently capturing nothing.
-- Guardian is receive-only. An alert appears when deauthentication plus disassociation frames reach 20 within a 10-second window.
+- Stations grades each client **PRIME / GOOD / WEAK / NO** from the known AP, RSSI, frame count and last-seen time; the grade is advisory and does not change attack admission. The P/G/W/N grading has not yet been validated on hardware.
+- Beacon stays on channels 1-13 and never selects channel 14. LOCK targets about 30 fps on one channel; HOP rotates every 250 ms. A channel change that fails while a client is attached triggers a deauth and one retry, then `HOLD chN`. Long-run stability and multi-client scenarios have not been tested.
+- KARR scans BLE advertisements for a device name containing `karr`, in six one-second non-blocking slices. It never connects and never transmits.
+- The Deauther frame-form panel defines MIXED, BCAST and UNICAST; SLOT4-6 are placeholders shown as N/A and cannot be pinned. Default MIXED + PIN keeps the previous behaviour. The panel has not yet been validated on hardware.
+- Guardian is receive-only and learns a per-channel baseline on entry (11 channels, about 22 seconds); channels with too few samples fall back to the global mean. A channel is flagged when its rate exceeds `baseline × 2 + floor` (deauth / disassoc 5, beacon 15), and a threat clears only after 2 seconds below the threshold.
 - EAPOL Capture only records handshakes from clients that reconnect naturally; it does not disconnect clients or crack keys. Save raw frames to a `.pcap` file for Wireshark.
 - Spectrum displays frame counts, not calibrated RF energy. The SoftAP follows the scanned channel and connected clients may briefly drop.
 - RFID Classic emulates UID-level behavior only; authenticated sectors are not answered, and the `0x8C` raw command path has not been hardware-validated.
 - **Predator:** P1 scan/classification and the detail page are usable; P2 RECON requires a connectable target and marks `TRUNC` when the heap or time limit is hit; **P3 Honeypot has not been hardware-validated** (continuous start/stop, SD loot writing and exit cleanup are still to be confirmed). Loot is written to `/loot/hp_*.txt`.
 - **WhisperPair:** verdicts are only given for devices advertising the Fast Pair service and matching the 25-model key table; everything else reports `UNKNOWN`. Failed probes show an error code.
 - **SkeletonKey:** requires the target to accept a connection; enumeration is capped at 24/96/192 and marks truncation. Writes are limited to writable characteristics and the value must be entered as hex.
-- **Airoha Race:** bounded reads only — no flash writing and no RAM read path yet.
+- **Airoha Race:** bounded reads only — no flash writing and no RAM read path yet. The read-only session has not been tested, because no suitable Airoha RACE device was available.
 - HaleHound modules are compile-validated but were not all hardware-validated at release time.
 
 ---
@@ -572,25 +581,44 @@ Firmware binaries are published on the [Releases](https://github.com/silentfox20
 
 | File | Purpose | Flash address |
 | --- | --- | --- |
-| `ESP32-DIV-V2-v1.9.1-full-16MB.bin` | **Recommended.** Complete image: bootloader, partition table (two application slots), OTA data, and application | `0x0` |
-| `ESP32-DIV-V2-v1.9.1-app.bin` | Application image only, for a device that already has the two-slot layout | `0x10000` |
-| `sha256sums.txt` | SHA-256 checksums | - |
+| [`ESP32-DIV-V2-v1.9.2-full-16MB.bin`](https://github.com/silentfox2023/ESP32-DIV/releases/download/v1.9.2/ESP32-DIV-V2-v1.9.2-full-16MB.bin) | **Recommended.** Complete image: bootloader, partition table (two application slots), OTA data, and application | `0x0` |
+| [`ESP32-DIV-V2-v1.9.2-app.bin`](https://github.com/silentfox2023/ESP32-DIV/releases/download/v1.9.2/ESP32-DIV-V2-v1.9.2-app.bin) | Application image only, for a device that already has the two-slot layout | `0x10000` |
+| [`sha256sums.txt`](https://github.com/silentfox2023/ESP32-DIV/releases/download/v1.9.2/sha256sums.txt) | SHA-256 checksums | - |
 
 ### esptool
 
 Complete image (recommended for a new device, after a full erase, or to restore a device that cannot update itself):
 
 ```
-esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x0 ESP32-DIV-V2-v1.9.1-full-16MB.bin
+esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x0 ESP32-DIV-V2-v1.9.2-full-16MB.bin
 ```
 
 Application-only update (device must already use the `default_8MB` two-slot layout):
 
 ```
-esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x10000 ESP32-DIV-V2-v1.9.1-app.bin
+esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x10000 ESP32-DIV-V2-v1.9.2-app.bin
 ```
 
 Flashing from **Arduino IDE** works as well: enable **Erase All Flash Before Sketch Upload** and select the 16 MB flash size with the two-OTA-slot partition scheme used by this release.
+
+### Build options when compiling from source
+
+The official binaries are built with these board options:
+
+| Option | Value | Why |
+| --- | --- | --- |
+| `FlashSize` | `16M` | Matches the hardware |
+| `PartitionScheme` | `default_8MB` | Two application slots, required for Web OTA and SD Card Update |
+| `PSRAM` | `disabled` | **Must stay disabled.** `PSRAM=opi` claims GPIO33-37, including the display's GPIO35/36/37, and the device boots to a white screen |
+| `USBMode` | `hwcdc` | USB CDC console |
+| `CDCOnBoot` | `cdc` / **Enabled** | With `CDCOnBoot` disabled, `Serial` falls back to UART0 and the USB console shows no log output |
+| `FlashMode` | `dio` | QIO can produce a white screen on this hardware |
+
+FQBN:
+
+```
+esp32:esp32:esp32s3:FlashSize=16M,PartitionScheme=default_8MB,PSRAM=disabled,USBMode=hwcdc,CDCOnBoot=cdc,FlashMode=dio
+```
 
 ### Flash Download Tool
 
@@ -600,7 +628,7 @@ Flashing from **Arduino IDE** works as well: enable **Erase All Flash Before Ske
 | Partition table | `0x8000` | Yes |
 | Application | `0x10000` | Yes |
 
-Use **DIO** flash mode and 40 MHz SPI speed. QIO or QOUT can produce a white screen with no serial output on ESP32-DIV V2 hardware. The full 16 MB image already contains all three parts and only needs the single `0x0` write.
+Use **DIO** flash mode; the published images are built for 80 MHz. QIO or QOUT can produce a white screen with no serial output on ESP32-DIV V2 hardware. The full 16 MB image already contains all three parts and only needs the single `0x0` write.
 
 ### microSD update
 
@@ -658,10 +686,10 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 ## FAQ
 
 **The screen is white and there is no serial output.**
-Flash mode mismatch. Use **DIO**, not QIO or QOUT.
+Two causes. If you flashed a binary built from source, make sure the build used **PSRAM=disabled** — with `PSRAM=opi` the PSRAM claims GPIO35/36/37, which the display uses, so the panel stays white. Also use **DIO** flash mode, not QIO or QOUT. If the screen is fine but the USB console stays silent, rebuild with **CDCOn Boot=Enabled** (`CDCOnBoot=cdc`); otherwise `Serial` goes to UART0.
 
 **Web OTA reboots immediately after pressing Update, and the device comes back on the old firmware.**
-The device has a single-slot partition table, so the update has nowhere valid to write. Web OTA and SD Card Update cannot fix this themselves. Flash `ESP32-DIV-V2-v1.9.1-full-16MB.bin` at `0x0` once (or upload from Arduino IDE with **Erase All Flash Before Sketch Upload** enabled); afterwards in-device updates work normally. See [Flashing](#flashing).
+The device has a single-slot partition table, so the update has nowhere valid to write. Web OTA and SD Card Update cannot fix this themselves. Flash `ESP32-DIV-V2-v1.9.2-full-16MB.bin` at `0x0` once (or upload from Arduino IDE with **Erase All Flash Before Sketch Upload** enabled); afterwards in-device updates work normally. See [Flashing](#flashing).
 
 **A restricted feature shows a license page.**
 The device MAC is not in the authorized list, or the DroneX license is missing. Drone and HaleHound share the MAC whitelist; DroneX uses a separate ECDSA license.
