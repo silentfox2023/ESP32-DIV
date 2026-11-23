@@ -676,6 +676,18 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 
 ---
 
+## Recent fixes (v1.9.3 final build)
+
+- **Captive Portal exit:** one cleanup path plus a full-screen redraw; re-entering the portal works and the menu no longer draws over a stale frame.
+- **Deauth Detector exit:** the Wi-Fi driver and promiscuous state are restored and the feature's memory is released.
+- **Wi-Fi Beacon cold boot:** the AP is configured before it starts, so the feature opens reliably on the first run after power-on.
+- **Station Scanner ATK:** transmits through the packet TX path, with TX ok / fail counters and a one-shot first-frame diagnostic.
+- **SkeletonKey:** short connect timeouts with retries and a safe notification path; advertisements are filtered by `advType`.
+- **Sub-menu touch:** a touch that opens a menu is not delivered again to its first row, at every menu level.
+- **HaleHound:** touch selection works at every level, and all 17 sub-items print `[heap]` on entry and exit. HaleHound is available only on devices manufactured by Cirket.
+- **BLE Rubber Ducky:** HID service declaration, connected + encrypted + subscribed gate, and full callback and service teardown on exit.
+- **DroneX:** portal client activity is tracked to pace radio work, deauth is sent on each target's real channel, the map opens at a default viewpoint, and offline tiles are supported.
+
 ## Known limitations
 
 - **Single radio:** Wi-Fi and BLE features are mutually exclusive while active. A STA connection locks the radio to the router channel, so full-channel Wi-Fi RID scanning is unavailable in STA mode.
@@ -688,6 +700,7 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 - **DroneX AP first connection:** a phone connecting to the DroneX hotspot for the first time is dropped once and has to connect a second time.
 - **DroneX simulated broadcast gap:** simulated targets have a gap of roughly 10 seconds per round.
 - **Station Scanner count:** the number of stations found is noticeably lower than in v1.9.2; this is still under investigation.
+- **HaleHound Guardian heap:** after leaving Guardian, part of the heap is not returned. The feature remains usable; the remaining allocation is planned to be handled in a later release.
 - **HaleHound:** compile-validated; not every module has been hardware-validated. Station Scanner grading and the Deauther frame-form panel have not been tested on hardware.
 - **EAPOL Capture:** purely passive and requires a client to reconnect naturally.
 - **In-device updates:** Web OTA and SD Card Update require the two-slot partition table to be present already; they write into the inactive slot and alternate on each update. On a device with a single-slot layout they fail and the device reboots on the old firmware — flash the complete image at `0x0` once to recover.
