@@ -370,23 +370,30 @@ About shows the firmware version, build information, and project credits.
 
 ## DroneX and Remote ID
 
-DroneX is the flagship continuous monitoring platform. It performs time-sliced BLE and Wi-Fi Remote ID detection, merges observations into stable targets, and provides on-device and browser-based management.
+DroneX is the flagship continuous monitoring platform. It performs time-sliced BLE and Wi-Fi Remote ID detection, merges observations into stable targets, and provides on-device and browser-based management. A consolidated guide for DroneX and the **More > Drone** tools is in [Drone_Feature.md](Drone_Feature.md).
+
+### Entry and exit
+
+- Select the **DroneX** tile on the main menu. The firmware stores DroneX as the boot system and reboots into it; there is no in-place return to the main menu.
+- Leave DroneX from **Info > Exit DIV**, or hold **SELECT** for 1.5 seconds. The device reboots back into ESP32-DIV.
+- If the DroneX license is missing, the lock screen is shown instead. It returns to ESP32-DIV after 5 minutes, or immediately on a long SELECT press.
 
 ### Detection
 
 - Decodes **ASTM F3411**, **GB 46750-2025**, and **DJI proprietary DroneID**
 - Displays serial number, operator registration number, position, altitude, horizontal and vertical speed, heading, and pilot location
 - Merges BLE and Wi-Fi observations of the same aircraft
-- Marks a target inactive after 5 seconds without an advertisement and removes it after 30 seconds
-- Supports observer mode: send `HOME,<latitude>,<longitude>` over serial to set a protected point; range and bearing are then shown per target and persisted across reboots
+- Keeps up to 6 live targets; the Scan tab shows 3 cards and points to the web UI for the rest
+- Marks a target gray after 8 seconds without an advertisement and removes it after 30 seconds
+- Supports observer mode: send `HOME,<latitude>,<longitude>` over serial to set a protected point; range and bearing are then shown per target and persisted in NVS. `HOME,CLEAR` restores the default observer point `26.4875092, 106.7232399`.
 
 ### Alerts, lists, and logs
 
 - New target: audible alert and red RGB indication
 - Emergency, fault, and blacklisted targets trigger visible alarms on screen and in the browser UI
-- Black and white lists support serial-number or MAC-prefix entries
-- Each target creates an SD card track session for later route review
-- A built-in simulator can inject virtual targets with `SIM START` and `SIM STOP` for demonstrations and training without affecting real detection
+- Black and white lists support serial-number, real-name registration number, or MAC-prefix entries
+- Each target creates an SD card track session under `/dronerx/` for later route review
+- The **Sim** tab and serial commands inject 1-3 virtual targets for demonstrations and training without affecting real detection: `SIM START`, `SIM STOP`, `SIM SWAP`, `SIM PAT`, `SIM N <1-3>`
 
 ### Browser dashboard
 
@@ -398,9 +405,9 @@ Connect to the device hotspot and open `http://192.168.4.1`:
 | Hotspot password | `dronerx88` |
 | Dashboard URL | `http://192.168.4.1` |
 
-The dashboard shows live statistics, a target list, a map, alert state, and editable lists and settings. All HTTP responses use `Connection: close`, and static asset paths are versioned to avoid stale browser caches. When map tiles cannot be fetched, the UI falls back to an offline tactical view.
+The root page offers a mobile management UI (`/m`) and a PC management UI (`/pc`); the choice is remembered. The dashboard shows live statistics, a target list, a map or tactical view, alert state, history, and editable lists and settings. All HTTP responses use `Connection: close`, and static asset paths are versioned to avoid stale browser caches. When map tiles cannot be fetched, the UI falls back to an offline tactical view.
 
-**STA mode:** the settings page can store a router SSID and password. The device joins the router while keeping its own hotspot. Access the dashboard from the same LAN at `http://dronerx.local` or the device STA IP; internet access remains available for map tiles. Once STA is connected, the firmware closes its own hotspot to free about 30 KB of heap and avoid channel conflicts, then reopens it automatically if STA remains down for 15 seconds. A 10-second quiet period prevents rapid toggling. A manual AP override is available on the Info tab and through the `APCTL` serial command.
+**AP+STA:** the DroneX hotspot is always kept on, anchored to channel 6, while the device may also join a router. Access the dashboard from the same LAN at `http://dronerx.local` (when the mDNS service has enough heap) or the device STA IP. Internet access remains available for map tiles. In STA mode the single radio is locked to the router channel, so Wi-Fi RID is only received on that channel; BLE detection continues. The firmware does not shut the hotspot down in STA mode.
 
 ### DroneX activation
 
@@ -418,9 +425,13 @@ A successful activation is stored permanently and revalidated on every boot.
 
 ### RID Scanner
 
-RID Scanner is a zero-configuration scanner for field checks. It alternates between Wi-Fi channels 1-13 and BLE advertising, then lists active targets with serial number, latitude/longitude, RSSI, and source interface. Protocol counters show management frames, BLE, GB, DJI, and ASTM traffic. A target turns gray after 5 seconds without an advertisement and is removed after 30 seconds.
+RID Scanner is a zero-configuration scanner for field checks. It alternates between a 6.5-second Wi-Fi phase (channels 1-13, 500 ms each) and a 5-second BLE phase, then lists active targets with serial number, latitude/longitude, RSSI, source interface, and channel. Protocol counters show management frames, BLE callbacks, BLE ODID, NAN, RID beacons, DJI, parse failures, all beacons, vendor IEs, and GB frames. A target turns gray after 5 seconds without an advertisement and is removed after 30 seconds.
 
-Two channel modes are available: **AUTO** (default, rotates 1-13) and **manual lock** (stays on one channel for a higher hit rate). On exit the channel is reset to `AUTO / CH1`. Targets on other channels are naturally invisible while locked. Press SELECT to exit.
+Two channel modes are available: **AUTO** (default, rotates 1-13) and **LOCK** (stays on one channel for a higher hit rate). On exit the channel is reset to `AUTO / CH1`. Targets on other channels are naturally invisible while locked.
+
+Controls: **LEFT / RIGHT** step the locked channel (pressing either while in AUTO switches to LOCK), **DOWN** toggles AUTO/LOCK, **UP** pages the list, and **SELECT** exits. The touch navigation bar exposes the same actions.
+
+If the Wi-Fi driver cannot start, or the heap gate rejects the Wi-Fi allocation, the scanner continues in BLE-only mode and says so on screen.
 
 ### RID Spoof
 
@@ -433,7 +444,9 @@ RID Spoof (formerly RID Sim) turns the device into a virtual drone fleet. It sim
 | Wi-Fi beacon | DJI proprietary DroneID |
 | BLE advertising | ASTM F3411 service data (0xFFFA) |
 
-Each aircraft is placed at a different bearing, starting at 300 m and increasing by 80 m per aircraft, with incremental altitude, speed, and heading. Identities are randomized on boot and include model names such as Mini 2 and Mavic Air 2. RID Spoof emits RID frames that carry these identities; it does not emulate OcuSync radio links.
+Each aircraft is placed at a different bearing, starting at 300 m and increasing by 80 m per aircraft, with incremental altitude, speed, and heading. Identities are randomized on boot and include model names such as Mini 2 and Mavic Air 2. RID Spoof emits RID frames that carry these identities; it does not emulate OcuSync radio links. Wi-Fi beacons are sent on channel 6; BLE uses 31-byte legacy advertising with a 120 ms time slice per identity.
+
+The screen shows **RUN / PAUSED**, **STEADY / FLOOD**, the active protocol preset, the identity count, packet rate, and three identities per page. **START / STOP** toggles transmission, **STEADY / FLOOD** selects a 1000 ms or 250 ms Wi-Fi burst, **BLE ON / OFF** toggles the BLE channel, and the protocol button cycles **DEF / ASTM / GB / DJI**. Physical controls: SELECT starts or stops, RIGHT toggles STEADY/FLOOD, DOWN cycles the protocol, UP pages, LEFT exits.
 
 Serial commands while RID Spoof is running:
 
@@ -530,11 +543,12 @@ Connect over USB at **115200 bps** with newline or CRLF line endings. Commands w
 | Command | Action |
 | --- | --- |
 | `DRONEXKEY,<license>` | Activate DroneX with a Base32 license |
-| `HOME,<lat>,<lon>` | Set the observer position |
-| `SIM START` / `SIM STOP` | Start or stop the target simulator |
-| `APCTL` | Show AP override state |
-| `APCTL auto` / `ap` / `sta` | Restore automatic AP control, force AP on, or force AP off |
-| `APCTL toggle` | Cycle the AP override state |
+| `HOME,<lat>,<lon>` / `HOME,CLEAR` | Set or clear the observer position |
+| `LIST` | Print the current target list |
+| `SIM START` / `SIM STOP` / `SIM SWAP` / `SIM PAT` | Control the target simulator and its motion pattern |
+| `SIM N <1-3>` | Set the number of simulated targets |
+| `STA,<ssid>,<pass>` / `STA,DISCONNECT` / `STA,CLEAR` | Manage the router STA connection |
+| `VERBOSE,1` / `VERBOSE,0` | Enable or disable detailed runtime logs |
 | `help` | Show DroneX-specific commands |
 
 `gpioscan` labels reserved pins (display, SPI, SD, I2C, USB, PSRAM/flash, serial, boot) and reads the remaining pins with internal pull-ups, reporting HIGH or LOW.
@@ -669,8 +683,8 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 1. Flash the complete image at `0x0` (recommended). Web OTA and SD Card Update can be used later, but only on a device that already has the two-slot partition table — see [Flashing](#flashing).
 2. Power on and wait for the main menu. The status bar shows battery, charge state, Wi-Fi, and BLE indicators.
 3. Use the touchscreen or the five buttons: up/down to move, SELECT to confirm, LEFT to go back.
-4. For RID work, open **More > Drone > RID Scanner** for a quick scan, or **DroneX** for continuous monitoring.
-5. For DroneX browser access, join the `DroneX-xxxx` hotspot with password `dronerx88` and open `http://192.168.4.1`.
+4. For RID work, open **More > Drone > RID Scanner** for a quick scan, or select **DroneX** on the main menu for continuous monitoring. DroneX reboots into its own system; leave it with **Info > Exit DIV** or by holding **SELECT** for 1.5 seconds.
+5. For DroneX browser access, join the `DroneX-xxxx` hotspot with password `dronerx88` and open `http://192.168.4.1`. The hotspot stays on in STA mode, but the radio follows the router channel.
 6. Insert a FAT32 microSD card for PCAP logs, IR profiles, Ducky scripts, RID tracks, firmware updates, and settings mirroring.
 7. Open **Settings** to adjust brightness, theme, NeoPixel effects, and background scanning.
 
@@ -691,7 +705,8 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 ## Known limitations
 
 - **Single radio:** Wi-Fi and BLE features are mutually exclusive while active. A STA connection locks the radio to the router channel, so full-channel Wi-Fi RID scanning is unavailable in STA mode.
-- **STA and Wi-Fi RID:** while STA is connected, Wi-Fi promiscuous sniffing is disabled because modem sleep and promiscuous mode conflict and cause severe packet loss. BLE RID detection continues normally. Use AP mode for Wi-Fi RID detection.
+- **STA and Wi-Fi RID:** while STA is connected, promiscuous sniffing stays enabled but the radio is locked to the router channel. Only Wi-Fi RID beacons on that channel are received; BLE RID detection continues normally. Use the DroneX hotspot (AP) for full-channel Wi-Fi RID detection.
+- **DroneX target capacity:** DroneX keeps up to 6 live targets; the Scan tab displays 3 cards and the browser UI shows the full list.
 - **RID prerequisites:** drones transmit GB 46750-2025 RID only after obtaining a GNSS fix, and Chinese-standard broadcasts apply to China-region firmware. Outdoor testing is required.
 - **RID bands:** 5.8 GHz is not supported by ESP32-S3 hardware. BLE 5 extended advertising is not supported; only legacy BLE advertising is decoded.
 - **Spectrum:** shows 802.11 frame counts rather than calibrated RF energy.
@@ -723,7 +738,7 @@ The device MAC is not in the authorized list, or the DroneX license is missing. 
 RID requires an outdoor environment and a GNSS fix on the aircraft. Move outdoors and keep the device in AP mode for Wi-Fi RID reception.
 
 **The hotspot disappeared after connecting to a router.**
-Expected. DroneX closes its own hotspot in STA mode. Use the Info tab AP button or `APCTL toggle` to force it back on.
+It should not: current firmware keeps the `DroneX-xxxx` hotspot on in STA mode. The first phone association may still be dropped once, so reconnect. If the phone still cannot see the hotspot, reboot the device and check the Info tab for AP and client state.
 
 **IR recording does not work without an SD card.**
 IR profiles are stored on the microSD card. Insert a FAT32 card.
@@ -732,7 +747,7 @@ IR profiles are stored on the microSD card. Insert a FAT32 card.
 Modern phones use a private, randomly generated MAC address for each Wi-Fi network by default. The address on air is not the hardware address printed in the phone settings, so it will never match. This is operating system behaviour, not a limitation of the device.
 
 **Why does the heartbeat show `sniff=0` in STA mode?**
-Wi-Fi promiscuous sniffing is intentionally disabled while STA is connected, as described in Known limitations. BLE RID remains active.
+It should stay at `sniff=1` while STA is connected; the radio is locked to the router channel but promiscuous sniffing remains enabled. A persistent `sniff=0` points to a failed sniffer task or very low heap, not to normal STA operation. Reboot and check the `[MEM]` and `[HB]` lines.
 
 ---
 
