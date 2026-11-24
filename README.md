@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
   <img src="https://github.com/user-attachments/assets/1f70e8ba-d8be-4889-959a-700294068a3e" alt="ESP32-DIV V2 banner" width="100%"/>
 
