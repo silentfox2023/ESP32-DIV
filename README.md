@@ -98,12 +98,6 @@ HaleHound bundles 17 wireless experiment modules behind a single menu: Radio Tes
 
 *HaleHound module list. Every module reports READY from the shared list; the Stations scanner is the newest entry.*
 
-### HaleHound Stations scanner
-
-<img src="docs/images/feature-halehound-stations.jpg" alt="HaleHound Stations scanner listing connected clients with MAC, RSSI, access point and per-client frame counts" width="420"/>
-
-*Stations lists associated clients with their MAC, RSSI, and parent access point. The header shows the total client count and the active channel mode, a pinned row is marked `[>]`, and the footer reports the current scan channel and total stations. Back / Next / Info / Prev / Stop are on the touch bar.*
-
 ### AirTag Scream
 
 <img src="docs/images/feature-scream.jpg" alt="AirTag Scream BLE name and payload rotation screen showing names, cycle time and transmit counters" width="420"/>
@@ -128,17 +122,17 @@ HaleHound bundles 17 wireless experiment modules behind a single menu: Radio Tes
 
 *Radio Test verifies the three nRF24 modules, CC1101, PN532, and GPS in one pass. Missing modules report NO FIX or FAIL without blocking the rest of the firmware.*
 
+### HaleHound Stations Scanner
+
+<img src="docs/images/feature-halehound-stations.jpg" alt="HaleHound Stations scanner listing connected clients with MAC, RSSI, access point and per-client frame counts" width="420"/>
+
+*Stations lists associated clients with their MAC, RSSI, and parent access point. The header shows the total client count and the active channel mode, a pinned row is marked `[>]`, and the footer reports the current scan channel and total stations. Back / Next / Info / Prev / Stop are on the touch bar.*
+
 ### Auth Flood
 
 <img src="docs/images/feature-auth-flood.jpg" alt="Auth Flood screen showing target AP, BSSID, virtual station count and transmit statistics" width="420"/>
 
 *Auth Flood target selection. All offensive modules are restricted to authorized testing.*
-
-### 2.4 GHz Scanner
-
-<img src="docs/images/feature-24ghz-scanner.jpg" alt="2.4 GHz Scanner RF status panel with peak frequency, mapped Wi-Fi channel, activity and a 2.400-2.500 GHz spectrum chart" width="420"/>
-
-*2.4 GHz Scanner. The RF Status panel shows the peak frequency, the matching Wi-Fi channel, signal strength, the number of active channels, the configured range (2.4-2.483 GHz, 128 channels), and the monitoring state; the spectrum chart spans 2.400-2.500 GHz. Cal / Scan / Exit are on the touch bar.*
 
 ### Drone Jelly
 
@@ -152,17 +146,17 @@ HaleHound bundles 17 wireless experiment modules behind a single menu: Radio Tes
 
 *A single unit is enough to test, validate and demo any RID detection system — no real drone required.*
 
+### 2.4 GHz Scanner
+
+<img src="docs/images/feature-24ghz-scanner.jpg" alt="2.4 GHz Scanner RF status panel with peak frequency, mapped Wi-Fi channel, activity and a 2.400-2.500 GHz spectrum chart" width="420"/>
+
+*2.4 GHz Scanner. The RF Status panel shows the peak frequency, the matching Wi-Fi channel, signal strength, the number of active channels, the configured range (2.4-2.483 GHz, 128 channels), and the monitoring state; the spectrum chart spans 2.400-2.500 GHz. Cal / Scan / Exit are on the touch bar.*
+
 ### DroneX on-device RID detector
 
 <img src="docs/images/feature-rid-detector.jpg" alt="DroneX RID Detector screen listing detected DJI Mavic targets with distance and signal strength" width="420"/>
 
 *DroneX RID Detector showing multiple DJI targets, distance, and RSSI. Scan, Setup, Info, Sim, and Atk tabs are available at the bottom.*
-
-### DroneX activation lock screen
-
-<img src="docs/images/feature-dronerx-lock.jpg" alt="DroneX license lock screen showing the device MAC, the three activation methods and the auto-return countdown" width="420"/>
-
-*When no DroneX license is present, the lock screen shows the device MAC and the three activation methods (web, SD card, serial). The unit returns to ESP32-DIV after five minutes, or immediately on a long SELECT press.*
 
 ### DroneX Web UI
 
@@ -182,11 +176,17 @@ HaleHound bundles 17 wireless experiment modules behind a single menu: Radio Tes
 
 *The tactical map plots aircraft, pilots, and the observer. It falls back to an offline tactical view when map tiles cannot be loaded.*
 
-### DroneX phone app (DroneRX)
+### DroneX Phone APP (DroneRXApp)
 
 <img src="docs/images/feature-dronerx-app.jpg" alt="DroneRX phone app showing live decode counters, a map with aircraft, remote controller and observer markers, and observer coordinates" width="420"/>
 
 *The DroneRX phone app mirrors the device view: live counters for tracked targets, RID, BLE, Wi-Fi, DJI, and the current listener window; target, history, and simulation tabs; and standard / satellite / tactical map layers. Aircraft, remote controllers/pilots, and the observer point use distinct markers (hollow aircraft markers mean the target is on the ground). Tiles load over the phone network with WGS84 to GCJ02 correction, and the app falls back to the offline tactical map when offline.*
+
+### DroneX Activation lock screen
+
+<img src="docs/images/feature-dronerx-lock.jpg" alt="DroneX license lock screen showing the device MAC, the three activation methods and the auto-return countdown" width="420"/>
+
+*When no DroneX license is present, the lock screen shows the device MAC and the three activation methods (web, SD card, serial). The unit returns to ESP32-DIV after five minutes, or immediately on a long SELECT press.*
 
 ---
 
