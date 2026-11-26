@@ -6,7 +6,7 @@
 
   <h3>Multi-band wireless research platform &mdash; SilentFOX Edition</h3>
 
-  <p><strong>Firmware v1.9.3 &middot; DroneX 2.1.0 &middot; ESP32-S3</strong></p>
+  <p><strong>Firmware v1.9.4 &middot; DroneX 2.1.0 &middot; ESP32-S3</strong></p>
 
   <p>
     <a href="https://github.com/silentfox2023/ESP32-DIV/releases/latest"><img src="https://img.shields.io/github/v/release/silentfox2023/ESP32-DIV?color=orange&label=firmware" alt="Latest firmware release"/></a>
@@ -273,10 +273,10 @@ HaleHound bundles 17 wireless experiment modules behind a single menu: Radio Tes
 
 | Tool | Description |
 | --- | --- |
-| Packet Monitor | Real-time channel waterfall across all 14 channels, optional PCAP logging to SD |
+| Packet Monitor | Real-time channel waterfall across all 14 channels, optional PCAP logging to SD; the capture pool is allocated on demand in two tiers (10 slots, or 6 when post-allocation heap headroom is insufficient) |
 | Wi-Fi Scanner | Lists nearby access points with SSID, channel, RSSI, and security details |
 | Beacon Spammer | Broadcasts forged SSIDs, either custom or randomized |
-| WiFi Deauther | Sends deauthentication and disassociation frames to selected, authorized targets; a target action panel adds Deauth / Clone SSID (open AP) / Details |
+| WiFi Deauther | Sends deauthentication and disassociation frames to selected, authorized targets; a target action panel adds Deauth / Clone SSID (open AP) / Details; idle channel re-checks use a single-channel fast probe before falling back to a full scan |
 | Deauth Detector | Passive detection of deauthentication attacks |
 | Captive Portal | Soft AP with captive DNS and a web server, supporting SSID cloning |
 | Probe Sniffer | Collects probe requests with a source-MAC table, Dev / SSID / P counters, and one-tap Evil Twin cloning of the selected SSID |
@@ -289,6 +289,10 @@ HaleHound bundles 17 wireless experiment modules behind a single menu: Radio Tes
 **Karma Attack notes:** the sniffer captures probe requests, stores up to 32 learned SSIDs, transmits beacons every 15 ms, switches the SoftAP to the most active SSID every 2.5 seconds, and redirects clients to a captive portal. Channel hopping runs every 800 ms. The portal now serves a sign-in page and stores submitted username / password / SSID pairs in EEPROM (up to 20 entries). The firmware does not send deauthentication frames to the real access point.
 
 **Probe Sniffer notes:** entering the feature pauses background radio tasks and saves any existing SoftAP configuration. The Evil Twin clone copies the SSID only, not the key. On exit the saved AP is restored, or the radio is switched off if there was no AP session before entry.
+
+**WiFi Deauther notes:** while idle, the target AP channel is re-checked every 15 seconds. The check first probes only the recorded channel (blocking, 60-120 ms residency, about 0.4 s per check) and falls back to a full scan only on a miss; a confirmed channel is written back to the AP record. This removes the periodic 8-10 s main-loop freeze. If the router changes channel between two checks, deauth keeps going to the old channel for up to 15 seconds until the next check corrects it.
+
+**Packet Monitor notes:** the PCAP pool is allocated on entry. The 10-slot tier (23,620 B) is used only when free heap and the largest free block both stay at or above 24 KB after allocation; otherwise it degrades to 6 slots (14,172 B) with an 8 KB floor. If neither tier fits, a popup reports the minimum requirement and Packet Monitor exits instead of starting a half-initialised capture. About 29% of capture slots are dropped on SD writes because the card cannot keep up; the waterfall is unaffected.
 
 ### Bluetooth
 
@@ -333,6 +337,8 @@ Since v1.9.2 the 2.4 GHz Scanner uses all three nRF24 modules at the same time, 
 | Jamming Detector | Receive-only monitoring for jamming and abnormal noise, with Sentinel patrol over 300-925 MHz and an alerts panel |
 
 Replay Attack and Saved Profiles support all five CC1101 modulations: **2-FSK, GFSK, ASK/OOK, 4-FSK, and MSK**. A valid capture triggers a short buzzer confirmation (2000 Hz for RSSI events, 2600 Hz for DECODE events, 70 ms). Invalid or noisy signals are filtered before they can be saved or transmitted, and CC1101 communication has timeout protection so a missing module cannot hang the boot process.
+
+**Raw replay criteria:** raw waveforms are validated on a 25 us pulse-width histogram. In addition to the top three bins, each bin's +/-1 neighbours are counted, so jitter that splits one pulse across two adjacent bins no longer rejects a valid capture; the capture must still reach 60% coverage with the top bin at 20% or more. Raw capture now runs up to six 400 ms slices and stops at the first slice with 32 or more edges. This path has not yet been hardware-validated; further short-window retry work is deferred to the v1.9.4 corrected build.
 
 ### More
 
@@ -392,7 +398,7 @@ The two RID tools previously listed here now live in **More > Drone**.
 
 ### Settings and About
 
-Settings covers theme colors, display brightness, NeoPixel effects, background auto-scan, and saving the configuration. The NeoPixel section offers five effects — solid, breath, off, marquee, and blink — plus three brightness levels (low, medium, high). Solid, breath, and blink follow the accent color; the marquee completes one lap in 300 ms. Settings are written to NVS namespace `esp32div` first and mirrored to `/config/settings.json` on SD when a card is present, so settings survive power loss even without a card. LittleFS is not used.
+Settings covers theme colors, display brightness, NeoPixel effects, Idle AutoScan (row 6), and saving the configuration. The NeoPixel section offers five effects — solid, breath, off, marquee, and blink — plus three brightness levels (low, medium, high). Solid, breath, and blink follow the accent color; the marquee completes one lap in 300 ms. Settings are written to NVS namespace `esp32div` first and mirrored to `/config/settings.json` on SD when a card is present, so settings survive power loss even without a card. LittleFS is not used.
 
 About shows the firmware version, build information, and project credits.
 
@@ -527,7 +533,7 @@ HaleHound is a self-contained suite of 17 wireless experiment modules, implement
 
 **Notes:**
 
-- Stations hops across channels 1-13 by default. You can lock a single channel or select a specific access point; results are sorted by signal strength, and one row can be pinned while scanning continues. The deauth handoff only runs for a client whose access point is known — without that association it is refused.
+- Stations holds 96 station slots and hops across channels 1-13 every 350 ms by default. You can lock a single channel or select a specific access point; results are sorted by signal strength, and one row can be pinned while scanning continues. The deauth handoff only runs for a client whose access point is known — without that association it is refused.
 - If the device hotspot has associated clients, changing channel fails at the driver level. The firmware briefly detaches the hotspot client and retries; if the channel still cannot be set, it stays on the real channel and tells you so instead of pretending to scan elsewhere.
 - Frame capture re-initialises promiscuous mode in a fixed order (off, set filter, register callback, on, read back) and verifies the result, so a scan no longer appears to run while silently capturing nothing.
 - Stations grades each client **PRIME / GOOD / WEAK / NO**, with `?` (PENDING) while there is not enough evidence; the grade is advisory and does not change attack admission. The P/G/W/N grading has not yet been validated on hardware.
@@ -639,22 +645,22 @@ Firmware binaries are published on the [Releases](https://github.com/silentfox20
 
 | File | Purpose | Flash address |
 | --- | --- | --- |
-| [`ESP32-DIV-V2-v1.9.3-full-16MB.bin`](https://github.com/silentfox2023/ESP32-DIV/releases/download/v1.9.3/ESP32-DIV-V2-v1.9.3-full-16MB.bin) | **Recommended.** Complete image: bootloader, partition table (two application slots), OTA data, and application | `0x0` |
-| [`ESP32-DIV-V2-v1.9.3-app.bin`](https://github.com/silentfox2023/ESP32-DIV/releases/download/v1.9.3/ESP32-DIV-V2-v1.9.3-app.bin) | Application image only, for a device that already has the two-slot layout | `0x10000` |
-| [`sha256sums.txt`](https://github.com/silentfox2023/ESP32-DIV/releases/download/v1.9.3/sha256sums.txt) | SHA-256 checksums | - |
+| [`ESP32-DIV-V2-v1.9.4-full-16MB.bin`](https://github.com/silentfox2023/ESP32-DIV/releases/download/v1.9.4/ESP32-DIV-V2-v1.9.4-full-16MB.bin) | **Recommended.** Complete image: bootloader, partition table (two application slots), OTA data, and application | `0x0` |
+| [`ESP32-DIV-V2-v1.9.4-app.bin`](https://github.com/silentfox2023/ESP32-DIV/releases/download/v1.9.4/ESP32-DIV-V2-v1.9.4-app.bin) | Application image only, for a device that already has the two-slot layout | `0x10000` |
+| [`sha256sums.txt`](https://github.com/silentfox2023/ESP32-DIV/releases/download/v1.9.4/sha256sums.txt) | SHA-256 checksums | - |
 
 ### esptool
 
 Complete image (recommended for a new device, after a full erase, or to restore a device that cannot update itself):
 
 ```
-esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x0 ESP32-DIV-V2-v1.9.3-full-16MB.bin
+esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x0 ESP32-DIV-V2-v1.9.4-full-16MB.bin
 ```
 
 Application-only update (device must already use the `default_8MB` two-slot layout):
 
 ```
-esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x10000 ESP32-DIV-V2-v1.9.3-app.bin
+esptool.py --chip esp32s3 -p COMx -b 921600 write_flash 0x10000 ESP32-DIV-V2-v1.9.4-app.bin
 ```
 
 Flashing from **Arduino IDE** works as well: enable **Erase All Flash Before Sketch Upload** and select the 16 MB flash size with the two-OTA-slot partition scheme used by this release.
@@ -726,17 +732,16 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 
 ---
 
-## Recent fixes (v1.9.3 final build)
+## Recent fixes (v1.9.4)
 
-- **Captive Portal exit:** one cleanup path plus a full-screen redraw; re-entering the portal works and the menu no longer draws over a stale frame.
-- **Deauth Detector exit:** the Wi-Fi driver and promiscuous state are restored and the feature's memory is released.
-- **Wi-Fi Beacon cold boot:** the AP is configured before it starts, so the feature opens reliably on the first run after power-on.
-- **Station Scanner ATK:** transmits through the packet TX path, with TX ok / fail counters and a one-shot first-frame diagnostic.
-- **SkeletonKey:** short connect timeouts with retries and a safe notification path; advertisements are filtered by `advType`.
-- **Sub-menu touch:** a touch that opens a menu is not delivered again to its first row, at every menu level.
-- **HaleHound:** touch selection works at every level, and all 17 sub-items print `[heap]` on entry and exit. HaleHound is available only on devices manufactured by Cirket.
-- **BLE Rubber Ducky:** HID service declaration, connected + encrypted + subscribed gate, and full callback and service teardown on exit.
-- **DroneX:** portal client activity is tracked to pace radio work, deauth is sent on each target's real channel, the map opens at a default viewpoint, and offline tiles are supported.
+- **Wi-Fi/BLE coexistence:** a shared netif guard reuses `WIFI_AP_DEF` / `WIFI_STA_DEF` instead of recreating them, and modem sleep follows the BLE state; repeated `duplicate key` errors, coexistence aborts and persistent `80211_tx rc=257` drops are gone.
+- **WiFi Deauther:** idle channel re-checks probe one channel first (about 0.4 s) and fall back to a full scan only on a miss; the re-check timer is rebased to entry and scan completion, and exit takes priority. The periodic 8-10 s freeze is gone, the idle window is above 14.5 s, and Stop-to-exit is under one second.
+- **Packet Monitor:** the PCAP pool is allocated in two tiers with heap-headroom checks (10 slots, or 6 when memory is tight); if neither fits, the feature shows a popup and exits.
+- **Sub-GHz:** raw replay validation now counts +/-1 neighbour bins around the top pulse-width bins with a 20% top-bin floor; raw capture runs up to six 400 ms slices.
+- **HaleHound Stations:** 96 station slots and a 350 ms hop interval.
+- **Settings:** row 6 is renamed `Idle AutoScan` (behaviour unchanged).
+- **SD File Manager:** directory entries are released from the dispatch layer, so both key exit and touch navigation clean up.
+- **DroneX:** idle free heap after entry stays above 45 KB.
 
 ## Known limitations
 
@@ -750,7 +755,10 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 - **Wardriver → RID Scanner:** after leaving Wardriver, the RID Scanner falls back to BLE-only until the Wi-Fi side is re-initialised (exit and re-enter, or reboot).
 - **DroneX AP first connection:** a phone connecting to the DroneX hotspot for the first time is dropped once and has to connect a second time.
 - **DroneX simulated broadcast gap:** simulated targets have a gap of roughly 10 seconds per round.
-- **Station Scanner count:** the number of stations found is noticeably lower than in v1.9.2; this is still under investigation.
+- **Station Scanner count:** the number of stations found is still noticeably lower than in v1.9.2. The station table (96 slots) and hop interval (350 ms) were enlarged in this build; the count itself is still under investigation.
+- **Deauther channel-change window:** if the router changes channel between two 15-second re-checks, deauth frames keep going to the old channel for up to 15 seconds until the next check corrects it.
+- **Packet Monitor write loss:** about 29% of capture slots are dropped when writing PCAP to SD because the card cannot keep up. The waterfall is unaffected, but captures are not guaranteed to be frame-complete.
+- **raw Replay retry:** the six-slice 400 ms raw capture path is included but not hardware-validated; further short-window retry fixes are deferred to the v1.9.4 corrected build.
 - **HaleHound Guardian heap:** after leaving Guardian, part of the heap is not returned. The feature remains usable; the remaining allocation is planned to be handled in a later release.
 - **HaleHound:** compile-validated; not every module has been hardware-validated. Station Scanner grading and the Deauther frame-form panel have not been tested on hardware.
 - **EAPOL Capture:** purely passive and requires a client to reconnect naturally.
@@ -765,7 +773,7 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 Two causes. If you flashed a binary built from source, make sure the build used **PSRAM=disabled** — with `PSRAM=opi` the PSRAM claims GPIO35/36/37, which the display uses, so the panel stays white. Also use **DIO** flash mode, not QIO or QOUT. If the screen is fine but the USB console stays silent, rebuild with **CDCOn Boot=Enabled** (`CDCOnBoot=cdc`); otherwise `Serial` goes to UART0.
 
 **Web OTA reboots immediately after pressing Update, and the device comes back on the old firmware.**
-The device has a single-slot partition table, so the update has nowhere valid to write. Web OTA and SD Card Update cannot fix this themselves. Flash `ESP32-DIV-V2-v1.9.3-full-16MB.bin` at `0x0` once (or upload from Arduino IDE with **Erase All Flash Before Sketch Upload** enabled); afterwards in-device updates work normally. See [Flashing](#flashing).
+The device has a single-slot partition table, so the update has nowhere valid to write. Web OTA and SD Card Update cannot fix this themselves. Flash `ESP32-DIV-V2-v1.9.4-full-16MB.bin` at `0x0` once (or upload from Arduino IDE with **Erase All Flash Before Sketch Upload** enabled); afterwards in-device updates work normally. See [Flashing](#flashing).
 
 **A restricted feature shows a license page.**
 The device MAC is not in the authorized list, or the DroneX license is missing. Drone and HaleHound share the MAC whitelist; DroneX uses a separate ECDSA license.
