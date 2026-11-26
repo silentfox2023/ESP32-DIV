@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
   <img src="https://github.com/user-attachments/assets/1f70e8ba-d8be-4889-959a-700294068a3e" alt="ESP32-DIV V2 banner" width="100%"/>
 
@@ -54,7 +54,7 @@ This SilentFOX edition adds a dedicated **drone Remote ID (RID)** toolchain, inc
 | **Bluetooth** | BLE Scanner, BLE Sniffer, BLE Spoofer (single identity / CHAOS rotation), Sour Apple, BLE Jammer, BLE Rubber Ducky, AirTag Spoofer, AirTag Sniffer, Skimmer Detect |
 | **SubGHz** | Replay Attack (REPLAY HUNT presets), Sub-GHz Jammer, Saved Profiles, De Bruijn / Brute Force, Jamming Detector (Sentinel patrol + alerts) |
 | **More** | IR remote tools, RFID/NFC (8 tools), GPS tools, **Drone** submenu (4 tools), HaleHound (17 modules) |
-| **DroneX** | Continuous BLE + Wi-Fi Remote ID detection, target tracking, alerts, black/white lists, SD track logs, browser dashboard |
+| **DroneX** | Continuous BLE + Wi-Fi Remote ID detection, target tracking, alerts, black/white lists, SD track logs, browser dashboard (mobile `/m` and PC `/pc` layouts), and the DroneRX phone app |
 | **Tools** | Serial Monitor, Update Firmware (Web OTA / SD), Touch Calibrate, SD File Manager, DEV Info |
 | **Settings / About** | Theme, brightness, five NeoPixel effects with three brightness levels, background auto-scan, persistent settings, version and credits |
 
@@ -98,6 +98,12 @@ HaleHound bundles 17 wireless experiment modules behind a single menu: Radio Tes
 
 *HaleHound module list. Every module reports READY from the shared list; the Stations scanner is the newest entry.*
 
+### HaleHound Stations scanner
+
+<img src="docs/images/feature-halehound-stations.jpg" alt="HaleHound Stations scanner listing connected clients with MAC, RSSI, access point and per-client frame counts" width="420"/>
+
+*Stations lists associated clients with their MAC, RSSI, and parent access point. The header shows the total client count and the active channel mode, a pinned row is marked `[>]`, and the footer reports the current scan channel and total stations. Back / Next / Info / Prev / Stop are on the touch bar.*
+
 ### AirTag Scream
 
 <img src="docs/images/feature-scream.jpg" alt="AirTag Scream BLE name and payload rotation screen showing names, cycle time and transmit counters" width="420"/>
@@ -128,6 +134,12 @@ HaleHound bundles 17 wireless experiment modules behind a single menu: Radio Tes
 
 *Auth Flood target selection. All offensive modules are restricted to authorized testing.*
 
+### 2.4 GHz Scanner
+
+<img src="docs/images/feature-24ghz-scanner.jpg" alt="2.4 GHz Scanner RF status panel with peak frequency, mapped Wi-Fi channel, activity and a 2.400-2.500 GHz spectrum chart" width="420"/>
+
+*2.4 GHz Scanner. The RF Status panel shows the peak frequency, the matching Wi-Fi channel, signal strength, the number of active channels, the configured range (2.4-2.483 GHz, 128 channels), and the monitoring state; the spectrum chart spans 2.400-2.500 GHz. Cal / Scan / Exit are on the touch bar.*
+
 ### Drone Jelly
 
 <img src="docs/images/feature-Drone-Jelly.jpg" alt="Three NRF24 modules transmit continuous carriers on 2.4 GHz while hopping channels rapidly" width="420"/>
@@ -146,17 +158,35 @@ HaleHound bundles 17 wireless experiment modules behind a single menu: Radio Tes
 
 *DroneX RID Detector showing multiple DJI targets, distance, and RSSI. Scan, Setup, Info, Sim, and Atk tabs are available at the bottom.*
 
+### DroneX activation lock screen
+
+<img src="docs/images/feature-dronerx-lock.jpg" alt="DroneX license lock screen showing the device MAC, the three activation methods and the auto-return countdown" width="420"/>
+
+*When no DroneX license is present, the lock screen shows the device MAC and the three activation methods (web, SD card, serial). The unit returns to ESP32-DIV after five minutes, or immediately on a long SELECT press.*
+
 ### DroneX Web UI
 
 <img src="docs/images/feature-dronerx-webui.jpg" alt="DroneX device info page next to a phone browser showing detected drone targets" width="420"/>
 
 *The DroneX browser dashboard on a phone displays tracked targets, serial numbers, altitude, speed, and pilot position. The device keeps a local info page with heap, uptime, and packet counters.*
 
+### DroneX PC management UI
+
+<img src="docs/images/feature-dronerx-pc-webui.jpg" alt="DroneX PC management UI with electronic fence controls, black/white list editor, live target monitor and trajectory control" width="420"/>
+
+*The `/pc` layout adds an electronic fence anchored to a centre point, a black/white list editor that accepts one prefix per line, a live target monitor (model / serial / distance / altitude / speed / list), and a trajectory control panel with a circling mode and cluster auto-simulation.*
+
 ### DroneX tactical map
 
 <img src="docs/images/feature-dronerx-map.jpg" alt="DroneX browser tactical map showing relative drone and pilot positions around the observer" width="420"/>
 
 *The tactical map plots aircraft, pilots, and the observer. It falls back to an offline tactical view when map tiles cannot be loaded.*
+
+### DroneX phone app (DroneRX)
+
+<img src="docs/images/feature-dronerx-app.jpg" alt="DroneRX phone app showing live decode counters, a map with aircraft, remote controller and observer markers, and observer coordinates" width="420"/>
+
+*The DroneRX phone app mirrors the device view: live counters for tracked targets, RID, BLE, Wi-Fi, DJI, and the current listener window; target, history, and simulation tabs; and standard / satellite / tactical map layers. Aircraft, remote controllers/pilots, and the observer point use distinct markers (hollow aircraft markers mean the target is on the ground). Tiles load over the phone network with WGS84 to GCJ02 correction, and the app falls back to the offline tactical map when offline.*
 
 ---
 
@@ -407,7 +437,13 @@ Connect to the device hotspot and open `http://192.168.4.1`:
 
 The root page offers a mobile management UI (`/m`) and a PC management UI (`/pc`); the choice is remembered. The dashboard shows live statistics, a target list, a map or tactical view, alert state, history, and editable lists and settings. All HTTP responses use `Connection: close`, and static asset paths are versioned to avoid stale browser caches. When map tiles cannot be fetched, the UI falls back to an offline tactical view.
 
+The PC layout (`/pc`) adds workspace controls around the map: an electronic fence centred on a selectable coordinate with **Set as observer**, **Locate observer**, and **Return to origin** actions; a black/white list editor that accepts one prefix per line with save and sound toggles; a live target monitor listing model, serial number, distance, altitude, speed, and list membership; and a trajectory control panel with a circling (1-2 km, observe only) mode, cluster size / altitude / speed, and start/stop auto-simulation.
+
 **AP+STA:** the DroneX hotspot is always kept on, anchored to channel 6, while the device may also join a router. Access the dashboard from the same LAN at `http://dronerx.local` (when the mDNS service has enough heap) or the device STA IP. Internet access remains available for map tiles. In STA mode the single radio is locked to the router channel, so Wi-Fi RID is only received on that channel; BLE detection continues. The firmware does not shut the hotspot down in STA mode.
+
+### Phone app (DroneRX)
+
+The DroneRX companion app shows the device view on a phone: live decode counters (tracked targets, RID, BLE, Wi-Fi, DJI, and the current listener window), target and history tabs, and a simulation tab. The map offers standard, satellite, and tactical layers with a locate action. Aircraft, remote controllers/pilots, and the observer point are drawn with distinct markers; hollow aircraft markers mean the target is on the ground. Map tiles load over the phone's cellular connection and positions are corrected from WGS84 to GCJ02 so on-screen coordinates match Chinese map providers; without connectivity the app switches to the offline tactical map. The observer point is shown at the bottom, and the map auto-centres when it is not set.
 
 ### DroneX activation
 
