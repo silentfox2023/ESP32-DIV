@@ -338,7 +338,7 @@ Since v1.9.2 the 2.4 GHz Scanner uses all three nRF24 modules at the same time, 
 
 Replay Attack and Saved Profiles support all five CC1101 modulations: **2-FSK, GFSK, ASK/OOK, 4-FSK, and MSK**. A valid capture triggers a short buzzer confirmation (2000 Hz for RSSI events, 2600 Hz for DECODE events, 70 ms). Invalid or noisy signals are filtered before they can be saved or transmitted, and CC1101 communication has timeout protection so a missing module cannot hang the boot process.
 
-**Raw replay criteria:** raw waveforms are validated on a 25 us pulse-width histogram. In addition to the top three bins, each bin's +/-1 neighbours are counted, so jitter that splits one pulse across two adjacent bins no longer rejects a valid capture; the capture must still reach 60% coverage with the top bin at 20% or more. Raw capture now runs up to six 400 ms slices and stops at the first slice with 32 or more edges. This path has not yet been hardware-validated; further short-window retry work is deferred to the v1.9.4 corrected build.
+**Raw replay criteria:** raw waveforms are validated on a 25 us pulse-width histogram. In addition to the top three bins, each bin's +/-1 neighbours are counted, so jitter that splits one pulse across two adjacent bins no longer rejects a valid capture; the capture must still reach 60% coverage with the top bin at 20% or more. Raw capture now runs up to six 400 ms slices and stops at the first slice with 32 or more edges. Capture and criteria were verified against a real 315 MHz short-press remote (Garage-Car 315 preset): the first 400 ms slice hit with `edges=78 changes=78`, shape `n=78 m=57 avg=360 top=87:22%/37:21%/137:10% cov=68% top1=22% ok=1`, so the remaining slices were skipped. The captured waveform could not be replayed end-to-end because the target is a 2014 BMW 5-series rolling-code key, which is mechanically non-replayable; target-side replay with fixed-code (garage / rolling-shutter) remotes is deferred to the v1.9.4 corrected build.
 
 ### More
 
@@ -737,7 +737,7 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 - **Wi-Fi/BLE coexistence:** a shared netif guard reuses `WIFI_AP_DEF` / `WIFI_STA_DEF` instead of recreating them, and modem sleep follows the BLE state; repeated `duplicate key` errors, coexistence aborts and persistent `80211_tx rc=257` drops are gone.
 - **WiFi Deauther:** idle channel re-checks probe one channel first (about 0.4 s) and fall back to a full scan only on a miss; the re-check timer is rebased to entry and scan completion, and exit takes priority. The periodic 8-10 s freeze is gone, the idle window is above 14.5 s, and Stop-to-exit is under one second.
 - **Packet Monitor:** the PCAP pool is allocated in two tiers with heap-headroom checks (10 slots, or 6 when memory is tight); if neither fits, the feature shows a popup and exits.
-- **Sub-GHz:** raw replay validation now counts +/-1 neighbour bins around the top pulse-width bins with a 20% top-bin floor; raw capture runs up to six 400 ms slices.
+- **Sub-GHz:** raw replay validation now counts +/-1 neighbour bins around the top pulse-width bins with a 20% top-bin floor; raw capture runs up to six 400 ms slices. Both were verified on a real 315 MHz remote (first 400 ms slice: 78 edges, cov=68%, top1=22%).
 - **HaleHound Stations:** 96 station slots and a 350 ms hop interval.
 - **Settings:** row 6 is renamed `Idle AutoScan` (behaviour unchanged).
 - **SD File Manager:** directory entries are released from the dispatch layer, so both key exit and touch navigation clean up.
@@ -758,7 +758,7 @@ Both `app0` and `app1` are required for in-device updates. Writing only the appl
 - **Station Scanner count:** the number of stations found is still noticeably lower than in v1.9.2. The station table (96 slots) and hop interval (350 ms) were enlarged in this build; the count itself is still under investigation.
 - **Deauther channel-change window:** if the router changes channel between two 15-second re-checks, deauth frames keep going to the old channel for up to 15 seconds until the next check corrects it.
 - **Packet Monitor write loss:** about 29% of capture slots are dropped when writing PCAP to SD because the card cannot keep up. The waterfall is unaffected, but captures are not guaranteed to be frame-complete.
-- **raw Replay retry:** the six-slice 400 ms raw capture path is included but not hardware-validated; further short-window retry fixes are deferred to the v1.9.4 corrected build.
+- **raw Replay target-side effect:** the six-slice 400 ms capture path and the neighbour-bin criteria were verified with a real 315 MHz remote, but the final transmit effect is unverified - the test target was a 2014 BMW 5-series rolling-code key, which cannot be replayed by design. Fixed-code (garage / rolling-shutter) replay testing is deferred to the v1.9.4 corrected build.
 - **HaleHound Guardian heap:** after leaving Guardian, part of the heap is not returned. The feature remains usable; the remaining allocation is planned to be handled in a later release.
 - **HaleHound:** compile-validated; not every module has been hardware-validated. Station Scanner grading and the Deauther frame-form panel have not been tested on hardware.
 - **EAPOL Capture:** purely passive and requires a client to reconnect naturally.
