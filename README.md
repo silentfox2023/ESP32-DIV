@@ -62,10 +62,10 @@ This SilentFOX edition adds a dedicated **drone Remote ID (RID)** toolchain, inc
 
 | Tool | Location | Purpose | Access |
 | --- | --- | --- | --- |
-| **RID Scanner** | More > Drone | Fast, zero-configuration RID detection over Wi-Fi channels 1-13 and BLE | Device MAC whitelist |
-| **RID Spoof** | More > Drone | Multi-protocol RID transmitter simulating up to 12 drones | Device MAC whitelist |
-| **Drone Deauth** | More > Drone | Selective deauthentication against Wi-Fi drone control links | Device MAC whitelist |
-| **Drone Jelly** | More > Drone | 2.4 GHz carrier / sweep confined to 2400-2525 MHz | Device MAC whitelist |
+| **RID Scanner** | More > Drone | Fast, zero-configuration RID detection over Wi-Fi channels 1-13 and BLE | No license required |
+| **RID Spoof** | More > Drone | Multi-protocol RID transmitter simulating up to 12 drones | No license required |
+| **Drone Deauth** | More > Drone | Selective deauthentication against Wi-Fi drone control links | No license required |
+| **Drone Jelly** | More > Drone | 2.4 GHz carrier / sweep confined to 2400-2525 MHz | No license required |
 | **DroneX** | Main menu | Flagship continuous detection and management platform | Paid ECDSA license |
 
 All RID tools decode **ASTM F3411**, **GB 46750-2025**, and **DJI proprietary DroneID**, covering current DJI models, older DJI aircraft, and other compliant manufacturers.
@@ -369,12 +369,12 @@ Satellite Scanner allocates a full-screen off-screen buffer of about 143 KB. If 
 
 | Tool | Description |
 | --- | --- |
-| RID Scanner | Fast drone RID scanner over Wi-Fi channels 1-13 and BLE (device whitelist required) |
-| RID Spoof | Multi-protocol RID transmitter simulating up to 12 aircraft (device whitelist required) |
+| RID Scanner | Fast drone RID scanner over Wi-Fi channels 1-13 and BLE |
+| RID Spoof | Multi-protocol RID transmitter simulating up to 12 aircraft |
 | Drone Deauth | Passive drone-link identification followed by selective deauthentication of the Wi-Fi control link |
 | Drone Jelly | 2.4 GHz carrier or sweep limited to 2400-2525 MHz, aimed at drone control and video links |
 
-The whole Drone layer sits behind a single device authorization check made when **More > Drone** is opened; the individual tools inside it are not checked again.
+The **More > Drone** layer performs no device authorization check: it opens on every device, and the individual tools inside it are not checked. **More > HaleHound** remains gated by the device MAC whitelist.
 
 **Drone Deauth** identifies targets passively from Wi-Fi management frames: Wi-Fi Remote ID vendor IEs (ASTM F3411 / GB 46750 OUI `FA:0B:BC` and `90:3A:E6`), DJI DroneID vendor IE OUI `26:37:12`, NAN / Public Action RID broadcasts, and — as weak evidence only — beacon SSIDs matching drone prefixes such as `DJI-`, `TELLO-`, or `MAVIC-`. When a client (phone or controller app) is observed associated with the target, three out of four frames are sent directly to it; otherwise all frames are broadcast. This only affects 802.11 links such as a drone's own access point. It has no effect on OcuSync / Lightbridge or other proprietary frequency-hopping links, and it cannot reach 5 GHz.
 
@@ -620,18 +620,20 @@ Do not interrupt power during the update; the bootloader falls back to the previ
 
 ## Licensing and restricted features
 
-Two menu layers are restricted: **More > Drone** and **More > HaleHound**.
+Only **More > HaleHound** is restricted. **More > Drone** no longer performs a device authorization check and opens directly on every device.
 
 - Both menu entries are always visible and can always be opened.
-- On a device that is not authorized, opening the layer shows a single English license notice page instead of its contents.
-- The check is made once, when the layer is opened. The tools inside a layer (including RID Scanner and RID Spoof) are not checked again.
+- **More > Drone** (RID Scanner, RID Spoof, Drone Deauth, Drone Jelly) opens directly; no license and no MAC allowlist.
+- On a device whose MAC is not in the HaleHound allowlist, opening **More > HaleHound** shows a single English license notice page instead of its contents.
+- The HaleHound check is made once, when the layer is opened; its modules are not checked again.
 - Press **LEFT** / **SELECT**, or tap **Back**, to return to the previous menu.
-- Authorization is bound to the device Wi-Fi STA MAC address.
-- DroneX uses a separate paid ECDSA license; the two mechanisms are independent.
+- HaleHound authorization is bound to the device Wi-Fi STA MAC address.
+- DroneX uses a separate paid ECDSA license. The HaleHound MAC allowlist and the DroneX ECDSA license are independent.
+- At boot the serial console prints `[license] MAC=<MAC> HaleHound: LOCKED` or `... HaleHound: UNLOCKED`.
 
 <img src="docs/images/license-required.jpg" alt="License notice page shown when a restricted feature is opened on an unauthorized device" width="420"/>
 
-*The license notice page used by the Drone and HaleHound layers on unauthorized devices.*
+*The license notice page shown only by More > HaleHound on an unauthorized device.*
 
 ---
 
@@ -775,8 +777,8 @@ Two causes. If you flashed a binary built from source, make sure the build used 
 **Web OTA reboots immediately after pressing Update, and the device comes back on the old firmware.**
 The device has a single-slot partition table, so the update has nowhere valid to write. Web OTA and SD Card Update cannot fix this themselves. Flash `ESP32-DIV-V2-v1.9.4-full-16MB.bin` at `0x0` once (or upload from Arduino IDE with **Erase All Flash Before Sketch Upload** enabled); afterwards in-device updates work normally. See [Flashing](#flashing).
 
-**A restricted feature shows a license page.**
-The device MAC is not in the authorized list, or the DroneX license is missing. Drone and HaleHound share the MAC whitelist; DroneX uses a separate ECDSA license.
+**HaleHound or DroneX shows a license page.**
+The device MAC is not in the HaleHound allowlist, or the DroneX license is missing. More > Drone no longer requires a license; HaleHound uses the MAC allowlist and DroneX uses a separate ECDSA license.
 
 **DroneX finds no drones indoors.**
 RID requires an outdoor environment and a GNSS fix on the aircraft. Move outdoors and keep the device in AP mode for Wi-Fi RID reception.

@@ -3,10 +3,10 @@
 ## 1. 基线声明
 
 - 版本：`v1.9.4`（`shared.h` 的 `ESP32DIV_VERSION`）。
-- 发布点：2026-11-26。
+- 发布点：2026-11-26（2026-11-28 授权入口调整后重建）。
 - 板型：ESP32-DIV V2（ESP32-S3，16 MB Flash）。
 - 构建参数与 1.9.3 一致：`esp32:esp32:esp32s3:FlashSize=16M,PartitionScheme=default_8MB,PSRAM=disabled,USBMode=hwcdc,CDCOnBoot=cdc,FlashMode=dio`。
-- 本轮重点：WiFi/BLE 共存与 netif 所有权收敛、WiFi Deauther 空闲复核卡顿治理、Packet Monitor 抓包池按需分级、Sub-GHz raw 邻档判据、HaleHound Stations 容量提升、Settings 标签调整。
+- 本轮重点：WiFi/BLE 共存与 netif 所有权收敛、WiFi Deauther 空闲复核卡顿治理、Packet Monitor 抓包池按需分级、Sub-GHz raw 邻档判据、HaleHound Stations 容量提升、Settings 标签调整、授权入口调整（More → Drone 取消设备白名单）。
 
 ## 2. 本轮改动
 
@@ -59,6 +59,13 @@
 
 - WiFi/BLE 共存与 netif 所有权收敛后，DroneX 进入后的空闲堆保持在 45 KB 以上，为网页服务、地图与 RID 解码留出余量。
 
+### 2.9 授权入口调整
+
+- `More → Drone`（RID Scanner / RID Spoof / Drone Deauth / Drone Jelly）取消设备 MAC 白名单门控，所有设备可直接进入；入口与子层均不再校验。
+- `More → HaleHound` 授权判断不变，仍走 `rid_feature_lock.h` 的 MAC 白名单；未授权设备只显示授权提示页。
+- `DroneX` 的 ECDSA 付费许可不变，与 HaleHound 的 MAC 白名单互相独立。
+- 开机串口日志改为 `[license] MAC=<MAC> HaleHound: LOCKED/UNLOCKED`（原 `[rid-lock] MAC=... RID features: ...` 已废弃）。
+
 ## 3. 已知问题与边界
 
 1. **Deauther 最坏 15 秒空窗**：空闲复核周期为 15 秒。若路由器在两次复核之间自动跳信道，deauth 会在旧信道上继续发送，最长约 15 秒无效；下一轮复核发现后自动校正。属当前设计边界，不是卡死。
@@ -72,11 +79,10 @@
 
 ## 4. 发布产物与构建记录
 
-- 构建：2026-11-26，Arduino IDE 内置 arduino-cli + arduino-esp32 2.0.10-cn，FQBN 与 1.9.3 一致。
-- Flash 2,739,440 B（82%）；`shared.h` 版本号 `v1.9.4`。
-- `ESP32-DIV-V2-v1.9.4-app.bin`：2,739,440 B，SHA-256 `f1b477a053344ee24fb704e597aa8f3f4baba3d3ffdbc8a56f8e99549ae6ca1f`
-- `ESP32-DIV-V2-v1.9.4-full-16MB.bin`：2,804,976 B，SHA-256 `e6087fc0e0a7fcb615855afce42689db6072fa79480335db7ab59e9986d91ad6`
-- `sha256sums.txt`：194 B。
+- 构建：2026-11-28（授权入口调整后重建），Arduino IDE 内置 arduino-cli + arduino-esp32 2.0.10-cn，FQBN 与 1.9.3 一致。
+- Flash 2,740,640 B（82%）；`shared.h` 版本号 `v1.9.4`。
+- `ESP32-DIV-V2-v1.9.4-app.bin`：2,740,640 B，SHA-256 `7f79c19f104a462c5206042321a1e8a20c098ac2068701ccd91b444477b97d54`
+- `ESP32-DIV-V2-v1.9.4-full-16MB.bin` 与 `sha256sums.txt`：需按本次构建重新合并/生成后更新。
 - tag `v1.9.4`。
 - 本轮只上传二进制与 `sha256sums.txt`，不上传源码、不提交源码。
 
